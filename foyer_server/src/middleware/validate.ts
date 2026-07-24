@@ -3,12 +3,8 @@ import { ZodSchema, ZodError } from "zod";
 
 /**
  * Generic Zod validation middleware factory.
- *
  * Validates `req.body` against the provided Zod schema.
  * Returns 400 with structured error details if validation fails.
- *
- * Usage:
- *   router.post("/register", validate(registerSocietySchema), controller.register);
  */
 export const validate = (schema: ZodSchema) => {
   return (req: Request, res: Response, next: NextFunction): void => {

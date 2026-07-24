@@ -20,7 +20,7 @@ export interface IUser extends Document {
   name: string;
   email: string;
   phone: string;
-  role: Role;
+  roles: Role[];
   society: Types.ObjectId;
   tower: Types.ObjectId | null;
   flat: Types.ObjectId | null;
@@ -61,10 +61,14 @@ const userSchema = new Schema<IUser>(
       required: true,
     },
 
-    role: {
-      type: String,
+    roles: {
+      type: [String],
       enum: Object.values(Role),
       required: true,
+      validate: [
+        (val: string[]) => Array.isArray(val) && val.length > 0,
+        "User must have at least one role.",
+      ],
     },
 
     society: {
@@ -98,10 +102,19 @@ const userSchema = new Schema<IUser>(
   },
   {
     timestamps: true,
+    strict: true,
   }
 );
 
-// Index for fast lookups during authentication
+// Deduplicate roles before saving
+userSchema.pre("save", function () {
+  if (this.roles && Array.isArray(this.roles)) {
+    this.roles = Array.from(new Set(this.roles));
+  }
+});
+
+// Compound index for fast lookup & concurrency protection
+userSchema.index({ society: 1, uniqueId: 1 }, { unique: true });
 userSchema.index({ clerkId: 1 }, { sparse: true });
 
 export default model<IUser>("User", userSchema);

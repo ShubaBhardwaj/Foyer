@@ -1,18 +1,22 @@
 import { Router } from "express";
 import clerkAuth from "../middleware/clerkAuth";
-import { requireLinkedAccount } from "../middleware/roleAuth";
+import { requireLinkedAccount, requireRole } from "../middleware/roleAuth";
 import { validate } from "../middleware/validate";
 import societyController from "../controllers/society.controller";
+import structureController from "../controllers/structure.controller";
 import { registerSocietySchema } from "../validators/society.validator";
+import {
+  createStructureSchema,
+  expandStructureSchema,
+  updateStructureSchema,
+} from "../validators/structure.validator";
+import { Role } from "../models/User";
 
 const router = Router();
 
 /**
  * POST /society/register
- *
  * Registers a new society and creates the owner user.
- * Protected by Clerk JWT. No role check — this is how owners are bootstrapped.
- * The service layer verifies the Clerk user doesn't already have an account.
  */
 router.post(
   "/register",
@@ -23,15 +27,70 @@ router.post(
 
 /**
  * GET /society/me
- *
  * Returns the authenticated user's society.
- * Requires a linked account (any role).
  */
 router.get(
   "/me",
   clerkAuth,
   requireLinkedAccount,
   societyController.getMySociety.bind(societyController)
+);
+
+// ─── Society Structure Endpoints ─────────────────────────────────────────────
+
+/**
+ * POST /society/structure
+ * Generate initial society structure (Towers & Flats).
+ * Allowed: owner, super_admin.
+ */
+router.post(
+  "/structure",
+  clerkAuth,
+  requireLinkedAccount,
+  requireRole(Role.OWNER, Role.SUPER_ADMIN),
+  validate(createStructureSchema),
+  structureController.generate.bind(structureController)
+);
+
+/**
+ * POST /society/structure/expand
+ * Expand society structure by adding new towers.
+ * Allowed: owner, super_admin.
+ */
+router.post(
+  "/structure/expand",
+  clerkAuth,
+  requireLinkedAccount,
+  requireRole(Role.OWNER, Role.SUPER_ADMIN),
+  validate(expandStructureSchema),
+  structureController.expand.bind(structureController)
+);
+
+/**
+ * PATCH /society/structure
+ * Bulk update multiple towers in a single request.
+ * Allowed: owner, super_admin.
+ */
+router.patch(
+  "/structure",
+  clerkAuth,
+  requireLinkedAccount,
+  requireRole(Role.OWNER, Role.SUPER_ADMIN),
+  validate(updateStructureSchema),
+  structureController.update.bind(structureController)
+);
+
+/**
+ * GET /society/structure
+ * Fetch complete society structure (towers & flats).
+ * Allowed: owner, super_admin, admin.
+ */
+router.get(
+  "/structure",
+  clerkAuth,
+  requireLinkedAccount,
+  requireRole(Role.OWNER, Role.SUPER_ADMIN, Role.ADMIN),
+  structureController.get.bind(structureController)
 );
 
 export default router;

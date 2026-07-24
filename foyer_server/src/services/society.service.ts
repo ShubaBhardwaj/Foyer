@@ -15,20 +15,14 @@ interface RegisterSocietyResult {
  */
 class SocietyService {
   /**
-   * Register a new society.
-   *
-   * Flow:
-   * 1. Verify no society is already linked to this Clerk user.
-   * 2. Fetch Clerk user profile for email.
-   * 3. Generate a unique society code from the name.
-   * 4. Generate 6-character Unique ID for Owner.
-   * 5. Create Society and Owner User in a transaction.
+   * Register a new society and create the Owner user.
+   * This is the ONLY legitimate flow where the Owner role is assigned.
    */
   async registerSociety(
     clerkUserId: string,
     data: RegisterSocietyInput
   ): Promise<RegisterSocietyResult> {
-    // Step 1: Ensure this Clerk user doesn't already own a society.
+    // Ensure this Clerk user doesn't already own an account.
     const existingUser = await UserModel.findOne({ clerkId: clerkUserId });
     if (existingUser) {
       throw {
@@ -37,16 +31,10 @@ class SocietyService {
       };
     }
 
-    // Step 2: Fetch Clerk profile for email.
     const clerkProfile = await fetchClerkUser(clerkUserId);
-
-    // Step 3: Generate a unique society code.
     const societyCode = await this.generateSocietyCode(data.name);
-
-    // Step 4: Generate 6-character unique ID for Owner
     const ownerUniqueId = await generateUniqueId();
 
-    // Step 5: Create everything in a transaction.
     const session = await mongoose.startSession();
 
     try {
@@ -70,7 +58,7 @@ class SocietyService {
         { session }
       );
 
-      // Create Owner User
+      // Create Owner User with roles: [Role.OWNER]
       const [ownerDoc] = await UserModel.create(
         [
           {
@@ -80,7 +68,7 @@ class SocietyService {
             name: data.ownerName,
             email: clerkProfile.email,
             phone: data.ownerPhone,
-            role: Role.OWNER,
+            roles: [Role.OWNER],
             society: societyDoc._id,
             isVerified: true,
           },

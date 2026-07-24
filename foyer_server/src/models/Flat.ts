@@ -5,6 +5,8 @@ export interface IFlat extends Document {
   tower: Types.ObjectId;
   flatNumber: string;
   floor: number;
+  occupied: boolean;
+  occupiedBy: Types.ObjectId | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -31,11 +33,27 @@ const flatSchema = new Schema<IFlat>(
     floor: {
       type: Number,
       required: true,
+      min: 1,
+    },
+
+    occupied: {
+      type: Boolean,
+      default: false,
+    },
+
+    occupiedBy: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
     },
   },
   {
     timestamps: true,
+    strict: true,
   }
 );
+
+// Compound unique index — flat number must be unique per tower & society
+flatSchema.index({ society: 1, tower: 1, flatNumber: 1 }, { unique: true });
 
 export default model<IFlat>("Flat", flatSchema);
