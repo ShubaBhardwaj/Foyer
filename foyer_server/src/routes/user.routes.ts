@@ -1,12 +1,25 @@
 import { Router } from "express";
 import clerkAuth from "../middleware/clerkAuth";
-import { requireRole } from "../middleware/roleAuth";
+import { requireLinkedAccount, requireRole } from "../middleware/roleAuth";
 import { validate } from "../middleware/validate";
 import userController from "../controllers/user.controller";
 import { createUserSchema, createResidentSchema } from "../validators/user.validator";
 import { Role } from "../models/User";
 
 const router = Router();
+
+/**
+ * GET /user
+ * Returns all users in the authenticated user's society.
+ * Allowed: owner, super_admin, admin.
+ */
+router.get(
+  "/",
+  clerkAuth,
+  requireLinkedAccount,
+  requireRole(Role.OWNER, Role.SUPER_ADMIN, Role.ADMIN),
+  userController.getSocietyUsers.bind(userController)
+);
 
 /**
  * POST /user/super-admin

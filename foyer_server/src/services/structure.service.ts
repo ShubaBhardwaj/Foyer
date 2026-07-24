@@ -252,8 +252,49 @@ class StructureService {
     return {
       towersCount: towers.length,
       totalFlatsCount: flats.length,
+      towers,
+      flats,
       structure,
     };
+  }
+
+  /**
+   * Delete a specific tower and its un-occupied flats.
+   * Enforces Extensible Structure Lock Check (fails if any flat is occupied).
+   */
+  async deleteTower(
+    societyId: Types.ObjectId,
+    towerId: Types.ObjectId
+  ): Promise<void> {
+    const tower = await TowerModel.findOne({ _id: towerId, society: societyId });
+    if (!tower) {
+      throw {
+        statusCode: 404,
+        message: "Tower not found in this society.",
+      };
+    }
+
+    const session = await mongoose.startSession();
+
+    try {
+      session.startTransaction();
+
+      // Check structure lock (fails if any flat is occupied)
+      await this.checkStructureLock(towerId, session);
+
+      // Delete all flats in this tower
+      await FlatModel.deleteMany({ tower: towerId }).session(session);
+
+      // Delete tower document
+      await TowerModel.findByIdAndDelete(towerId).session(session);
+
+      await session.commitTransaction();
+    } catch (error) {
+      await session.abortTransaction();
+      throw error;
+    } finally {
+      session.endSession();
+    }
   }
 
   /**

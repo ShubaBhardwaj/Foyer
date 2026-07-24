@@ -201,6 +201,15 @@ class UserService {
       session.endSession();
     }
   }
+  /**
+   * Get all users for a society.
+   */
+  async getSocietyUsers(societyId: Types.ObjectId): Promise<IUser[]> {
+    return UserModel.find({ society: societyId })
+      .populate("tower", "name")
+      .populate("flat", "flatNumber floor")
+      .sort({ createdAt: -1 });
+  }
 }
 
 export default new UserService();

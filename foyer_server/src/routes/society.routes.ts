@@ -93,4 +93,17 @@ router.get(
   structureController.get.bind(structureController)
 );
 
+/**
+ * DELETE /society/structure/tower/:towerId
+ * Delete a specific tower block.
+ * Allowed: owner, super_admin.
+ */
+router.delete(
+  "/structure/tower/:towerId",
+  clerkAuth,
+  requireLinkedAccount,
+  requireRole(Role.OWNER, Role.SUPER_ADMIN),
+  structureController.deleteTower.bind(structureController)
+);
+
 export default router;

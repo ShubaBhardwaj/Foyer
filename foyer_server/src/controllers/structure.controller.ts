@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import { Types } from "mongoose";
 import structureService from "../services/structure.service";
 import { sendSuccess, sendError } from "../utils/apiResponse";
 import {
@@ -95,6 +96,29 @@ class StructureController {
       const statusCode = error.statusCode || 500;
       const message = error.message || "Failed to fetch society structure.";
       console.error("[StructureController.get]", message);
+      sendError(res, message, statusCode);
+    }
+  }
+
+  /**
+   * DELETE /society/structure/tower/:towerId
+   * Delete a specific tower block.
+   */
+  async deleteTower(req: Request, res: Response): Promise<void> {
+    try {
+      const societyId = req.user!.society;
+      const { towerId } = req.params;
+
+      await structureService.deleteTower(
+        societyId,
+        new Types.ObjectId(towerId)
+      );
+
+      sendSuccess(res, null, "Tower deleted successfully.");
+    } catch (error: any) {
+      const statusCode = error.statusCode || 500;
+      const message = error.message || "Failed to delete tower.";
+      console.error("[StructureController.deleteTower]", message);
       sendError(res, message, statusCode);
     }
   }

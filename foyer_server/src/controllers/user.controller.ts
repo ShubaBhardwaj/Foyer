@@ -49,6 +49,24 @@ class UserController {
   }
 
   /**
+   * GET /user
+   *
+   * Gets all users in the creator's society.
+   */
+  async getSocietyUsers(req: Request, res: Response): Promise<void> {
+    try {
+      const societyId = req.user!.society;
+      const users = await userService.getSocietyUsers(societyId);
+      sendSuccess(res, { users }, "Society users fetched successfully.");
+    } catch (error: any) {
+      const statusCode = error.statusCode || 500;
+      const message = error.message || "Failed to fetch society users.";
+      console.error("[UserController.getSocietyUsers]", message);
+      sendError(res, message, statusCode);
+    }
+  }
+
+  /**
    * Shared handler for creating users with a specific role.
    */
   private async createUserWithRole(
