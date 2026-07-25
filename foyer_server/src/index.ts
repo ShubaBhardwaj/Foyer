@@ -6,6 +6,7 @@ import DBConnect from "./config/db";
 import authRouter from "./routes/auth.routes";
 import societyRouter from "./routes/society.routes";
 import userRouter from "./routes/user.routes";
+import { visitorRouter } from "./routes/visitor.routes";
 import errorMiddleware from "./middleware/errorMiddleware";
 
 const app = express();
@@ -19,6 +20,7 @@ app.use(cors({ origin: "*" }));
 app.use("/auth", authRouter);
 app.use("/society", societyRouter);
 app.use("/user", userRouter);
+app.use("/visitors", visitorRouter);
 
 // Health check
 app.get("/", (_req, res) => {

@@ -280,3 +280,12 @@ export type CancelVisitorInput = z.infer<typeof cancelVisitorSchema>;
 export type CheckInVisitorInput = z.infer<typeof checkInVisitorSchema>;
 export type CheckOutVisitorInput = z.infer<typeof checkOutVisitorSchema>;
 export type ListVisitorsInput = z.infer<typeof listVisitorsSchema>;
+
+/**
+ * Visitor ID URL Parameter Schema.
+ */
+export const visitorIdParamsSchema = z.object({
+  id: objectIdSchema,
+});
+
+export type VisitorIdParamsInput = z.infer<typeof visitorIdParamsSchema>;

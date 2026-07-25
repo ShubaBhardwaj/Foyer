@@ -4,13 +4,16 @@ import ApiError from "../utils/apiError";
 
 /**
  * Generic Zod validation middleware factory.
- * Validates `req.body` against the provided Zod schema.
+ * Validates request property (`body`, `params`, or `query`) against the provided Zod schema.
  * Forwards validation errors to the global error middleware.
  */
-export const validate = (schema: ZodSchema) => {
+export const validate = (
+  schema: ZodSchema,
+  target: "body" | "params" | "query" = "body"
+) => {
   return (req: Request, res: Response, next: NextFunction): void => {
     try {
-      req.body = schema.parse(req.body);
+      req[target] = schema.parse(req[target]);
       next();
     } catch (error) {
       if (error instanceof ZodError) {
@@ -23,7 +26,7 @@ export const validate = (schema: ZodSchema) => {
         return;
       }
 
-      next(ApiError.badRequest("Invalid request body."));
+      next(ApiError.badRequest(`Invalid request ${target}.`));
     }
   };
 };
