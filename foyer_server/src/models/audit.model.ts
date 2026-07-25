@@ -70,8 +70,8 @@ export interface IAuditLog extends Document {
   action: AuditAction;
   resourceType: AuditResourceType;
   resourceId: Types.ObjectId | string;
-  before?: Record<string, unknown> | null;
-  after?: Record<string, unknown> | null;
+  before?: any;
+  after?: any;
   ipAddress?: string;
   userAgent?: string;
   createdAt: Date;

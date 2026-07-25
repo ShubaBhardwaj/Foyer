@@ -5,6 +5,8 @@ import { VisitorType } from "../constants/visitor.enums";
 import { Role, IUser } from "../models/User";
 import ApiError from "../utils/apiError";
 import notificationService from "./notification.service";
+import auditService from "./audit.service";
+import { AuditAction, AuditResourceType } from "../models/audit.model";
 import { parsePagination, calculateMeta } from "../utils/pagination";
 import { validateObjectId } from "../utils/validation";
 import { PaginatedResult } from "../types/common";
@@ -76,7 +78,30 @@ class VisitorService {
       );
     }
 
+    await this.safeAuditLog({
+      actor: creator._id,
+      actorRole: creator.roles[0] || "resident",
+      society: visitor.society,
+      action: AuditAction.VISITOR_CREATED,
+      resourceType: AuditResourceType.VISITOR,
+      resourceId: visitor._id,
+      after: visitor.toObject(),
+    });
+
     return visitor;
+  }
+
+  /**
+   * Helper to execute audit logging safely without breaking business flow.
+   */
+  private async safeAuditLog(
+    input: Parameters<typeof auditService.log>[0]
+  ): Promise<void> {
+    try {
+      await auditService.log(input);
+    } catch (err) {
+      console.warn("[VisitorService] Non-critical audit warning:", err);
+    }
   }
 
   /**
@@ -264,6 +289,8 @@ class VisitorService {
         );
       }
 
+      const beforeState = visitor.toObject();
+
       visitor.status = VisitorStatus.APPROVED;
       visitor.approvedAt = new Date();
       visitor.approvedBy = user._id;
@@ -276,6 +303,17 @@ class VisitorService {
         [visitor.resident.toString()],
         visitor.toObject()
       );
+
+      await this.safeAuditLog({
+        actor: user._id,
+        actorRole: user.roles[0] || "resident",
+        society: visitor.society,
+        action: AuditAction.VISITOR_APPROVED,
+        resourceType: AuditResourceType.VISITOR,
+        resourceId: visitor._id,
+        before: beforeState,
+        after: visitor.toObject(),
+      });
 
       return visitor;
     } catch (error) {
@@ -318,6 +356,8 @@ class VisitorService {
         );
       }
 
+      const beforeState = visitor.toObject();
+
       visitor.status = VisitorStatus.REJECTED;
       visitor.rejectedAt = new Date();
       visitor.rejectedBy = user._id;
@@ -330,6 +370,17 @@ class VisitorService {
         [visitor.resident.toString()],
         visitor.toObject()
       );
+
+      await this.safeAuditLog({
+        actor: user._id,
+        actorRole: user.roles[0] || "resident",
+        society: visitor.society,
+        action: AuditAction.VISITOR_REJECTED,
+        resourceType: AuditResourceType.VISITOR,
+        resourceId: visitor._id,
+        before: beforeState,
+        after: visitor.toObject(),
+      });
 
       return visitor;
     } catch (error) {
@@ -370,6 +421,8 @@ class VisitorService {
       );
     }
 
+    const beforeState = visitor.toObject();
+
     visitor.status = VisitorStatus.CANCELLED;
     if (statusRemark) visitor.approvalRemark = statusRemark;
 
@@ -379,6 +432,17 @@ class VisitorService {
       title: "Visitor Cancelled",
       body: `Visitor ${visitor.fullName} pass has been cancelled.`,
       userIds: [visitor.resident.toString()],
+    });
+
+    await this.safeAuditLog({
+      actor: user._id,
+      actorRole: user.roles[0] || "resident",
+      society: visitor.society,
+      action: AuditAction.VISITOR_CANCELLED,
+      resourceType: AuditResourceType.VISITOR,
+      resourceId: visitor._id,
+      before: beforeState,
+      after: visitor.toObject(),
     });
 
     return visitor;
@@ -422,6 +486,8 @@ class VisitorService {
         );
       }
 
+      const beforeState = visitor.toObject();
+
       visitor.status = VisitorStatus.CHECKED_IN;
       visitor.checkedInAt = new Date();
       visitor.checkedInBy = guardUser._id;
@@ -434,6 +500,17 @@ class VisitorService {
         title: "Visitor Arrived",
         body: `${visitor.fullName} has been checked in by guard.`,
         userIds: [visitor.resident.toString()],
+      });
+
+      await this.safeAuditLog({
+        actor: guardUser._id,
+        actorRole: guardUser.roles[0] || "guard",
+        society: visitor.society,
+        action: AuditAction.VISITOR_CHECKED_IN,
+        resourceType: AuditResourceType.VISITOR,
+        resourceId: visitor._id,
+        before: beforeState,
+        after: visitor.toObject(),
       });
 
       return visitor;
@@ -476,6 +553,8 @@ class VisitorService {
         );
       }
 
+      const beforeState = visitor.toObject();
+
       visitor.status = VisitorStatus.CHECKED_OUT;
       visitor.checkedOutAt = new Date();
       visitor.checkedOutBy = guardUser._id;
@@ -487,6 +566,17 @@ class VisitorService {
         title: "Visitor Departed",
         body: `${visitor.fullName} has checked out.`,
         userIds: [visitor.resident.toString()],
+      });
+
+      await this.safeAuditLog({
+        actor: guardUser._id,
+        actorRole: guardUser.roles[0] || "guard",
+        society: visitor.society,
+        action: AuditAction.VISITOR_CHECKED_OUT,
+        resourceType: AuditResourceType.VISITOR,
+        resourceId: visitor._id,
+        before: beforeState,
+        after: visitor.toObject(),
       });
 
       return visitor;
@@ -527,9 +617,22 @@ class VisitorService {
       );
     }
 
+    const beforeState = visitor.toObject();
+
     visitor.isDeleted = true;
     visitor.deletedAt = new Date();
     await visitor.save();
+
+    await this.safeAuditLog({
+      actor: user._id,
+      actorRole: user.roles[0] || "resident",
+      society: visitor.society,
+      action: AuditAction.VISITOR_DELETED,
+      resourceType: AuditResourceType.VISITOR,
+      resourceId: visitor._id,
+      before: beforeState,
+      after: visitor.toObject(),
+    });
 
     return visitor;
   }

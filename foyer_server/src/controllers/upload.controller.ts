@@ -53,7 +53,7 @@ class UploadController {
       overwrite: req.body?.overwrite === "true" || req.body?.overwrite === true,
     };
 
-    const result = await uploadService.upload(fileInput, options);
+    const result = await uploadService.upload(fileInput, options, req.user);
 
     ApiResponse.created(res, "Image uploaded successfully.", result);
   });
@@ -68,7 +68,7 @@ class UploadController {
       overwrite: req.body?.overwrite === "true" || req.body?.overwrite === true,
     };
 
-    const result = await uploadService.upload(fileInput, options);
+    const result = await uploadService.upload(fileInput, options, req.user);
 
     ApiResponse.created(res, "Document uploaded successfully.", result);
   });
@@ -86,7 +86,7 @@ class UploadController {
       throw ApiError.badRequest("Public ID is required for deletion.");
     }
 
-    const result = await uploadService.delete(publicId);
+    const result = await uploadService.delete(publicId, req.user);
 
     ApiResponse.ok(res, "File deleted successfully.", result);
   });
@@ -104,7 +104,7 @@ class UploadController {
       overwrite: req.body?.overwrite === "true" || req.body?.overwrite === true,
     };
 
-    const result = await uploadService.replace(oldPublicId, fileInput, options);
+    const result = await uploadService.replace(oldPublicId, fileInput, options, req.user);
 
     ApiResponse.ok(res, "File replaced successfully.", result);
   });
