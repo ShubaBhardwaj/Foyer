@@ -8,6 +8,7 @@ import societyRouter from "./routes/society.routes";
 import userRouter from "./routes/user.routes";
 import { visitorRouter } from "./routes/visitor.routes";
 import { uploadRouter } from "./routes/upload.routes";
+import { complaintRouter } from "./routes/complaint.routes";
 import errorMiddleware from "./middleware/errorMiddleware";
 
 const app = express();
@@ -23,6 +24,7 @@ app.use("/society", societyRouter);
 app.use("/user", userRouter);
 app.use("/visitors", visitorRouter);
 app.use("/uploads", uploadRouter);
+app.use("/complaints", complaintRouter);
 
 // Health check
 app.get("/", (_req, res) => {
