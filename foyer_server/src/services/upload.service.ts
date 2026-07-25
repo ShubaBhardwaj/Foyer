@@ -9,6 +9,8 @@ import {
 import ApiError from "../utils/apiError";
 import auditService from "./audit.service";
 import { AuditAction, AuditResourceType } from "../models/audit.model";
+import activityService from "./activity.service";
+import { ActivityType, ActivityVisibility } from "../models/activity.model";
 import { IUser } from "../models/User";
 
 /**
@@ -48,6 +50,29 @@ class UploadService {
           });
         } catch (err) {
           console.warn("[UploadService] Non-critical audit warning:", err);
+        }
+
+        try {
+          await activityService.publishCreate({
+            society: user.society,
+            actor: user._id,
+            actorName: user.name || user.email || "User",
+            actorRole: user.roles?.[0] || "user",
+            activityType: ActivityType.FILE_UPLOADED,
+            resourceType: "Storage",
+            resourceId: result.publicId,
+            message: `${user.name || "User"} uploaded file ${file.originalName || result.publicId}.`,
+            metadata: {
+              publicId: result.publicId,
+              url: result.url,
+              folder: file.folder || "general",
+              size: result.size,
+              mimeType: result.mimeType,
+            },
+            visibility: ActivityVisibility.ALL,
+          });
+        } catch (err) {
+          console.warn("[UploadService] Non-critical activity warning:", err);
         }
       }
 

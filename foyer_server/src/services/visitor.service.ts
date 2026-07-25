@@ -7,6 +7,8 @@ import ApiError from "../utils/apiError";
 import notificationService from "./notification.service";
 import auditService from "./audit.service";
 import { AuditAction, AuditResourceType } from "../models/audit.model";
+import activityService from "./activity.service";
+import { ActivityType, ActivityVisibility } from "../models/activity.model";
 import { parsePagination, calculateMeta } from "../utils/pagination";
 import { validateObjectId } from "../utils/validation";
 import { PaginatedResult } from "../types/common";
@@ -88,6 +90,23 @@ class VisitorService {
       after: visitor.toObject(),
     });
 
+    await this.safeActivityPublish({
+      society: visitor.society,
+      actor: creator._id,
+      actorName: creator.name || creator.email || "User",
+      actorRole: creator.roles[0] || "resident",
+      activityType: ActivityType.VISITOR_CREATED,
+      resourceType: "Visitor",
+      resourceId: visitor._id,
+      message: `${creator.name || "Resident"} created a visitor pass for ${visitor.fullName}.`,
+      metadata: {
+        visitorName: visitor.fullName,
+        visitorType: visitor.visitorType,
+        status: visitor.status,
+      },
+      visibility: ActivityVisibility.ALL,
+    });
+
     return visitor;
   }
 
@@ -101,6 +120,19 @@ class VisitorService {
       await auditService.log(input);
     } catch (err) {
       console.warn("[VisitorService] Non-critical audit warning:", err);
+    }
+  }
+
+  /**
+   * Helper to publish activity feed events safely without breaking business flow.
+   */
+  private async safeActivityPublish(
+    input: Parameters<typeof activityService.publish>[0]
+  ): Promise<void> {
+    try {
+      await activityService.publish(input);
+    } catch (err) {
+      console.warn("[VisitorService] Non-critical activity feed warning:", err);
     }
   }
 
@@ -315,6 +347,22 @@ class VisitorService {
         after: visitor.toObject(),
       });
 
+      await this.safeActivityPublish({
+        society: visitor.society,
+        actor: user._id,
+        actorName: user.name || user.email || "Resident",
+        actorRole: user.roles[0] || "resident",
+        activityType: ActivityType.VISITOR_APPROVED,
+        resourceType: "Visitor",
+        resourceId: visitor._id,
+        message: `${user.name || "Resident"} approved Visitor ${visitor.fullName}.`,
+        metadata: {
+          visitorName: visitor.fullName,
+          status: visitor.status,
+        },
+        visibility: ActivityVisibility.ALL,
+      });
+
       return visitor;
     } catch (error) {
       await session.abortTransaction();
@@ -382,6 +430,23 @@ class VisitorService {
         after: visitor.toObject(),
       });
 
+      await this.safeActivityPublish({
+        society: visitor.society,
+        actor: user._id,
+        actorName: user.name || user.email || "Resident",
+        actorRole: user.roles[0] || "resident",
+        activityType: ActivityType.VISITOR_REJECTED,
+        resourceType: "Visitor",
+        resourceId: visitor._id,
+        message: `${user.name || "Resident"} rejected Visitor ${visitor.fullName}.`,
+        metadata: {
+          visitorName: visitor.fullName,
+          status: visitor.status,
+          remark: statusRemark,
+        },
+        visibility: ActivityVisibility.ALL,
+      });
+
       return visitor;
     } catch (error) {
       await session.abortTransaction();
@@ -443,6 +508,22 @@ class VisitorService {
       resourceId: visitor._id,
       before: beforeState,
       after: visitor.toObject(),
+    });
+
+    await this.safeActivityPublish({
+      society: visitor.society,
+      actor: user._id,
+      actorName: user.name || user.email || "Resident",
+      actorRole: user.roles[0] || "resident",
+      activityType: ActivityType.VISITOR_CANCELLED,
+      resourceType: "Visitor",
+      resourceId: visitor._id,
+      message: `${user.name || "Resident"} cancelled Visitor pass for ${visitor.fullName}.`,
+      metadata: {
+        visitorName: visitor.fullName,
+        status: visitor.status,
+      },
+      visibility: ActivityVisibility.ALL,
     });
 
     return visitor;
@@ -513,6 +594,22 @@ class VisitorService {
         after: visitor.toObject(),
       });
 
+      await this.safeActivityPublish({
+        society: visitor.society,
+        actor: guardUser._id,
+        actorName: guardUser.name || guardUser.email || "Security Guard",
+        actorRole: guardUser.roles[0] || "guard",
+        activityType: ActivityType.VISITOR_CHECKED_IN,
+        resourceType: "Visitor",
+        resourceId: visitor._id,
+        message: `Guard ${guardUser.name || "Gate"} checked in Visitor ${visitor.fullName}.`,
+        metadata: {
+          visitorName: visitor.fullName,
+          status: visitor.status,
+        },
+        visibility: ActivityVisibility.ALL,
+      });
+
       return visitor;
     } catch (error) {
       await session.abortTransaction();
@@ -579,6 +676,22 @@ class VisitorService {
         after: visitor.toObject(),
       });
 
+      await this.safeActivityPublish({
+        society: visitor.society,
+        actor: guardUser._id,
+        actorName: guardUser.name || guardUser.email || "Security Guard",
+        actorRole: guardUser.roles[0] || "guard",
+        activityType: ActivityType.VISITOR_CHECKED_OUT,
+        resourceType: "Visitor",
+        resourceId: visitor._id,
+        message: `Guard ${guardUser.name || "Gate"} checked out Visitor ${visitor.fullName}.`,
+        metadata: {
+          visitorName: visitor.fullName,
+          status: visitor.status,
+        },
+        visibility: ActivityVisibility.ALL,
+      });
+
       return visitor;
     } catch (error) {
       await session.abortTransaction();
@@ -632,6 +745,22 @@ class VisitorService {
       resourceId: visitor._id,
       before: beforeState,
       after: visitor.toObject(),
+    });
+
+    await this.safeActivityPublish({
+      society: visitor.society,
+      actor: user._id,
+      actorName: user.name || user.email || "Resident",
+      actorRole: user.roles[0] || "resident",
+      activityType: ActivityType.VISITOR_CANCELLED,
+      resourceType: "Visitor",
+      resourceId: visitor._id,
+      message: `${user.name || "Resident"} deleted Visitor entry for ${visitor.fullName}.`,
+      metadata: {
+        visitorName: visitor.fullName,
+        isDeleted: true,
+      },
+      visibility: ActivityVisibility.ALL,
     });
 
     return visitor;
