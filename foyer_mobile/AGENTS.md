@@ -1,3 +1,8 @@
 # Expo HAS CHANGED
 
 Read the exact versioned docs at https://docs.expo.dev/versions/v55.0.0/ before writing any code.
+
+# Package Manager
+
+Use `bun` (e.g., `bun run dev`, `bunx expo start`, `bun install`) instead of `npm`, `yarn`, or `npx`.
+

@@ -12,6 +12,7 @@ import {
   AppSectionHeader,
   AppCard,
   AppButton,
+  AppIconButton,
   AppStatusPill,
   AppListRow,
   AppAvatar,
@@ -114,11 +115,10 @@ export default function HomeScreen() {
             👋 Good Morning, {userProfile.name}
           </H2>
           {/* TODO: Navigate to Notifications Screen */}
-          <AppButton
+          <AppIconButton
+            icon={Bell}
             variant="tonal"
-            size="sm"
-            label=""
-            leftIcon={Bell}
+            size={40}
             onPress={() => {
               // TODO: router.push("/(home)/notifications")
             }}
