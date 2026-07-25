@@ -1,5 +1,5 @@
 import React from "react";
-import { Text, StyleSheet } from "react-native";
+import { Text } from "react-native";
 import { useAppTheme, typographyScale } from "@/theme";
 import type { TypographyProps } from "./types";
 

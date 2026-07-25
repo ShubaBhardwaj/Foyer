@@ -1,5 +1,5 @@
 import React, { useCallback } from "react";
-import { Pressable, View, StyleSheet } from "react-native";
+import { View, Pressable, StyleSheet } from "react-native";
 import * as Haptics from "expo-haptics";
 import { useAppTheme, spacing, radius, fontFamily, opacity } from "@/theme";
 import { Label } from "../Typography";
@@ -39,14 +39,7 @@ export const AppChip = React.memo(function AppChip({
     : theme.colors.onSurface;
 
   return (
-    <Pressable
-      onPress={handlePress}
-      disabled={disabled}
-      accessibilityRole="button"
-      accessibilityLabel={accessibilityLabel ?? label}
-      accessibilityHint={accessibilityHint}
-      accessibilityState={{ selected, disabled }}
-      testID={testID}
+    <View
       style={[
         styles.container,
         {
@@ -55,13 +48,24 @@ export const AppChip = React.memo(function AppChip({
           opacity: disabled ? opacity.disabled : 1,
         },
       ]}
+      testID={testID}
     >
-      {LeadingIcon && (
-        <LeadingIcon size={16} color={textColor} style={styles.leadingIcon} />
-      )}
-      <Label style={{ color: textColor, fontFamily: fontFamily.medium }}>
-        {label}
-      </Label>
+      <Pressable
+        onPress={handlePress}
+        disabled={disabled}
+        accessibilityRole="button"
+        accessibilityLabel={accessibilityLabel ?? label}
+        accessibilityHint={accessibilityHint}
+        accessibilityState={{ selected, disabled }}
+        style={styles.mainArea}
+      >
+        {LeadingIcon && (
+          <LeadingIcon size={16} color={textColor} style={styles.leadingIcon} />
+        )}
+        <Label style={{ color: textColor, fontFamily: fontFamily.medium }}>
+          {label}
+        </Label>
+      </Pressable>
       {TrailingIcon && (
         <Pressable
           onPress={handleTrailingPress}
@@ -69,11 +73,12 @@ export const AppChip = React.memo(function AppChip({
           disabled={disabled}
           accessibilityRole="button"
           accessibilityLabel={`Remove ${label}`}
+          style={styles.trailingArea}
         >
           <TrailingIcon size={16} color={textColor} style={styles.trailingIcon} />
         </Pressable>
       )}
-    </Pressable>
+    </View>
   );
 });
 
@@ -81,15 +86,27 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
     borderRadius: radius.sm,
     borderWidth: 1,
     alignSelf: "flex-start",
+    overflow: "hidden",
+  },
+  mainArea: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingLeft: spacing.md,
+    paddingRight: spacing.sm,
+    paddingVertical: spacing.sm,
     gap: 4,
   },
   leadingIcon: {
     marginRight: 2,
+  },
+  trailingArea: {
+    paddingRight: spacing.md,
+    paddingVertical: spacing.sm,
+    justifyContent: "center",
+    alignItems: "center",
   },
   trailingIcon: {
     marginLeft: 2,

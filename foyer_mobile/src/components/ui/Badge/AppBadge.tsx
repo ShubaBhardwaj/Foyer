@@ -1,6 +1,6 @@
 import React from "react";
 import { View, StyleSheet, useColorScheme } from "react-native";
-import { useAppTheme, spacing, radius, fontFamily, semanticColors } from "@/theme";
+import { spacing, radius, fontFamily, semanticColors } from "@/theme";
 import { Label } from "../Typography";
 import type { AppBadgeProps, BadgeStatus } from "./types";
 
@@ -11,7 +11,6 @@ export const AppBadge = React.memo(function AppBadge({
   accessibilityLabel,
   testID,
 }: AppBadgeProps) {
-  const theme = useAppTheme();
   const scheme = useColorScheme();
   const isDark = scheme === "dark";
   const colors = getStatusColors(status, isDark);

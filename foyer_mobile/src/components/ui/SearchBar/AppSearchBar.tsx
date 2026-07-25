@@ -29,7 +29,7 @@ export const AppSearchBar = React.memo(function AppSearchBar({
 
   // Sync external controlled value if supplied
   useEffect(() => {
-    if (externalValue !== undefined && externalValue !== query) {
+    if (externalValue !== undefined) {
       setQuery(externalValue);
     }
   }, [externalValue]);

@@ -2,7 +2,7 @@ import React from "react";
 import { View, StyleSheet } from "react-native";
 import { Image } from "expo-image";
 import { useAppTheme, fontFamily, radius } from "@/theme";
-import { Body, Label } from "../Typography";
+import { Body } from "../Typography";
 import type { AppAvatarProps, AvatarSize } from "./types";
 
 const SIZE_MAP: Record<AvatarSize, { container: number; fontSize: number; iconSize: number }> = {
