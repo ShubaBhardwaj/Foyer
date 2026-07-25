@@ -1,73 +1,217 @@
 # 🏢 Foyer
 
-> **A modern, enterprise-grade Society Management Platform designed to simplify residential community administration, structure hierarchy management, user governance, and security access control.**
+> **A modern B2B SaaS Society Management Ecosystem empowering gated communities with digital administration, structural hierarchy management, multi-tier RBAC, and a seamless resident & guard mobile experience.**
+
+<p align="center">
+  <img src="https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript" />
+  <img src="https://img.shields.io/badge/Express.js-000000?style=for-the-badge&logo=express&logoColor=white" alt="Express.js" />
+  <img src="https://img.shields.io/badge/Next.js%2016-000000?style=for-the-badge&logo=next.js&logoColor=white" alt="Next.js 16" />
+  <img src="https://img.shields.io/badge/Expo%20v55-000000?style=for-the-badge&logo=expo&logoColor=white" alt="Expo" />
+  <img src="https://img.shields.io/badge/MongoDB-47A248?style=for-the-badge&logo=mongodb&logoColor=white" alt="MongoDB" />
+  <img src="https://img.shields.io/badge/Clerk-6C47FF?style=for-the-badge&logo=clerk&logoColor=white" alt="Clerk Auth" />
+</p>
 
 ---
 
-## 📖 Overview
+## 📖 1. About Foyer
 
 ### What is Foyer?
-**Foyer** is an enterprise-ready, multi-tenant residential society management ecosystem. It bridges administrative management with day-to-day community operations through a unified platform consisting of:
-- **Express.js / MongoDB REST API** (`foyer_server`): The high-performance, transaction-safe core backend handling authorization, role governance, and structure logic.
-- **Next.js 16 Web Governance Portal** (`foyer_web`): A feature-packed web application built for society owners and administrators to configure society structures, manage user roles, and monitor occupancy.
-- **Expo Mobile Application** (`foyer_mobile`): A mobile app engineered for operational workflows, daily resident tasks, and guard access control.
+**Foyer** is an enterprise-grade **B2B SaaS Society Management Platform** designed for gated communities, apartment complexes, housing societies, and residential townships. It digitizes day-to-day administrative operations, security access workflows, resident engagements, and structural asset tracking into a unified digital ecosystem.
 
 ### Why Foyer?
-Managing modern gated communities and apartment complexes involves complex hierarchy management (towers, floors, flats), multi-role security permissions, and operational communication. Existing tools are often fragmented or lack strict authorization safeguards.
+Traditional residential management relies on fragmented communication tools, physical entry ledgers, and manual record-keeping. This creates security vulnerabilities, administrative delays, and lack of transparency.
 
-Foyer solves these challenges by providing:
-1. **Automated Hierarchy Management**: Interactive tower generation and expansion with live flat numbering formulas (`floor * 100 + index`).
-2. **Strict Structure Locks**: Architectural integrity safeguards that prevent deleting or modifying towers containing occupied residences.
-3. **Secure Account Linking**: Google OAuth via Clerk tied to case-sensitive 6-character Unique IDs (`RgvKtk`), featuring automatic cleanup of mismatched Clerk user accounts.
-4. **Role-Based Access Control (RBAC)**: Clear operational boundaries between Owners, Super Admins, Society Admins, Residents, and Security Guards.
+Foyer solves these challenges by delivering:
+- **Automated Structural Hierarchy**: Programmatically creates complex tower, floor, and flat structures with live flat-numbering rules (`floor * 100 + flatIndex`).
+- **Occupancy Lock Safeguards**: Prevents destructive edits or deletion of towers/flats whenever residences are occupied.
+- **Seamless & Secure Account Linking**: Integrates Google OAuth via Clerk tied to 6-character case-sensitive Unique IDs (`RgvKtk`) with automatic cleanup of invalid authentication attempts.
+- **Granular Multi-Tier RBAC**: Enforces operational boundaries between Owners, Super Admins, Society Admins, Residents, and Security Guards.
 
----
-
-## ✨ Features
-
-### 🔐 Authentication & Account Verification
-- **Google OAuth via Clerk**: Fast, secure sign-in powered by Clerk Auth SDK.
-- **6-Character Case-Sensitive Unique ID Linking**: Pre-created users (Admins, Residents, Guards) link their Google accounts on first login using a unique 6-character code (e.g. `RgvKtk`).
-- **Automatic Clerk Account Cleanup**: If a user attempts first-time sign-in with an invalid `uniqueId` or an email that does not match their pre-registered profile, the backend automatically purges the Clerk user record via Clerk SDK to keep authentication state clean.
-- **Persistent JWT Interceptors**: Axios client on the frontend automatically attaches Clerk Bearer tokens to all API requests.
-
-### 🏢 Society & Structure Management
-- **Society Registration Wizard**: Bootstraps a new society along with its primary `owner` account.
-- **Structure Generator**: Programmatically generates complex society layouts with configurable tower counts, floors per tower, and flats per floor.
-- **Structure Expander**: Seamlessly appends new tower blocks to an existing society with sequential naming (`A, B, ... Z, A1, B1, ...`).
-- **Interactive Hierarchy Tree View**: Visual tree representation of towers, floors, and flats with live status indicators (`Vacant` vs `Occupied`).
-- **Extensible Structure Locks**: Restricts modifications or deletion of tower blocks if any flat within the tower is currently marked `occupied: true`.
-
-### 👥 User Governance & Role Management
-- **Tabbed User Portal**: Web dashboard displaying categorized tables with live counters for Super Admins, Admins & Owners, Residents, Security Guards, and All Users.
-- **Multi-Role Support**: Schema support for multiple user roles (`User.roles: [String]`). Users assigned to a residence automatically receive the `resident` role alongside their administrative roles (e.g., `["admin", "resident"]`).
-- **Owner Role Safeguards**: Server-side checks that strictly forbid creating or assigning the `owner` role through standard user creation endpoints.
-
-### 🎨 Mobile Design System & Modern UI Engine
-- **Custom Branding & Native Splash**: High-performance splash configuration with sleek Dark Slate (`#0F172A`) backdrop, branded Foyer splash icon, dark status bar, and custom app icons replacing generic Expo defaults.
-- **Plus Jakarta Sans Typography System**: Native font engine powering the `<Typography />` component across 4 weight variants (`Regular`, `Medium`, `SemiBold`, `Bold`) and 8 size presets (`h1`, `h2`, `h3`, `body1`, `body2`, `caption`, `label`, `button`).
-- **19+ Custom UI Components**: Enterprise-ready mobile component library (`foyer_mobile/src/components/ui/`):
-  - **Layout & Structure**: `AppScreen`, `AppCard`, `AppDivider`, `AppSectionHeader`.
-  - **Inputs & Controls**: `AppButton`, `AppIconButton`, `AppTextField`, `AppSearchBar`, `AppOtpInput`, `AppChip`, `AppSegmentedControl`.
-  - **Overlays & Modals**: `AppBottomSheet`, `AppDialog`, `AppLoader`.
-  - **Data Display & Status**: `AppAvatar`, `AppAvatarPicker`, `AppBadge`, `AppStatusPill`, `AppListRow`, `AppEmptyState`.
-- **Dynamic Light & Dark Theme System**: Centralized design tokens (`theme.ts`) featuring curated HSL color palettes (Slate, Indigo, Emerald, Amber, Rose) with system scheme detection and manual toggle support.
-- **Live Component Showcase**: Built-in developer showcase screen at `/dev/design-system` for real-time component auditing and state verification.
-
-### 🛡️ Security & Integrity
-- **ACID Mongoose Transactions**: Multi-document operations (structure setup, expansion, and resident flat assignment) run inside MongoDB sessions with atomic rollback support.
-- **Compound Unique Indexes**: Database-level protection preventing duplicate tower names, duplicate flat numbers per tower, or duplicate unique IDs per society.
-- **Server-Side Role Authorization**: Fine-grained middleware checking permissions before executing controller logic.
-
-### 🔮 Future Modules *(Planned)*
-- **Visitor & Gate Pass Management**: Pre-approve guests, track delivery personnel, and verify entry/exit via QR code scanning.
-- **Notice Board & Announcements**: Broadcast society updates with push notifications.
-- **Complaints & Maintenance Ticketing**: Track service requests with status workflows.
-- **Facility & Amenity Booking**: Reserve clubhouse, sports courts, and common spaces.
+### Who Uses Foyer?
+- **Society Owners & Developers**: Bootstrap society setups and maintain high-level administrative governance.
+- **Property Managers & Admins**: Oversee daily community operations, structure expansion, and user management.
+- **Residents (Owners & Tenants)**: Manage household profiles, pre-approve guests, book amenities, and engage with the community.
+- **Security Personnel**: Monitor gate checkpoints, record entry/exit traffic, and verify visitor QR codes.
 
 ---
 
-## 🛠️ Tech Stack
+## 🌐 2. Platform Overview
+
+The Foyer ecosystem consists of three tightly coupled applications:
+
+```
+                      ┌────────────────────────────────────────┐
+                      │              Clerk Auth                │
+                      └──────────────────┬─────────────────────┘
+                                         │
+                   ┌─────────────────────┴─────────────────────┐
+                   ▼                                           ▼
+      ┌─────────────────────────┐                 ┌─────────────────────────┐
+      │     Web Dashboard       │                 │   Mobile Application    │
+      │       (Next.js)         │                 │         (Expo)          │
+      │ Admin & Governance Hub  │                 │ Resident & Guard Portal │
+      └────────────┬────────────┘                 └────────────┬────────────┘
+                   │                                           │
+                   └─────────────────────┬─────────────────────┘
+                                         ▼
+                      ┌────────────────────────────────────────┐
+                      │            Backend REST API            │
+                      │               (Express)                │
+                      └──────────────────┬─────────────────────┘
+                                         ▼
+                      ┌────────────────────────────────────────┐
+                      │            MongoDB Database            │
+                      └────────────────────────────────────────┘
+```
+
+### 🧠 Backend REST API (`foyer_server`)
+- **Purpose**: Central data processing engine, role governance, and security layer.
+- **Responsibilities**:
+  - Handles authentication validation and user role authorization.
+  - Manages MongoDB Atlas operations with ACID session transactions.
+  - Programmatically generates and expands society hierarchies.
+  - Integrates Clerk SDK for user verification and orphaned account cleanup.
+
+### 💻 Web Dashboard (`foyer_web`)
+- **Purpose**: Administrative control panel for society management and structural governance.
+- **Who Uses It**: Society Owners, Super Admins, and Society Admins.
+- **Responsibilities**:
+  - Interactive society bootstrap wizard and structure generator.
+  - Visual hierarchy tree representation of towers, floors, and flats.
+  - Comprehensive user management tables for admins, residents, and security staff.
+
+### 📱 Mobile Application (`foyer_mobile`)
+- **Purpose**: On-the-go operational tool for residents and security staff.
+- **Who Uses It**: Residents and Security Guards.
+- **Responsibilities**:
+  - **Residents**: Manage profile settings, view structure details, pre-authorize visitors, and access community services.
+  - **Security Guards**: Dedicated Gate Mode for visitor entry/exit logs, resident verification, and QR code scanning.
+
+---
+
+## 🔄 3. How Foyer Works
+
+The business flow demonstrates how a society transitions from registration to operational management:
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Owner as Society Owner
+    actor Admin as Super / Society Admin
+    actor Resident as Resident
+    actor Guard as Security Guard
+    participant Web as Web Dashboard
+    participant API as REST API Backend
+    participant Mobile as Mobile App
+
+    %% Step 1: Registration & Setup
+    Owner->>Web: Register Society
+    Web->>API: Create Society & Owner Profile
+    Owner->>Web: Define Hierarchy (Towers, Floors, Flats)
+    Web->>API: Programmatically Generate Structure (ACID Transaction)
+    Owner->>Web: Create Super Admin & Society Admins
+
+    %% Step 2: User Onboarding
+    Admin->>Web: Register Residents & Security Guards
+    Web->>API: Generate 6-Character Unique IDs (e.g., RgvKtk)
+    API-->>Resident: Receive Invitation & Unique ID
+    API-->>Guard: Receive Invitation & Unique ID
+
+    %% Step 3: Mobile Onboarding & Usage
+    Resident->>Mobile: Install App & Authenticate via Clerk
+    Resident->>Mobile: Input Unique ID for Account Linking
+    Mobile->>API: Link Clerk User & Assign Resident Role
+    Resident->>Mobile: Access Visitors, Community, Facilities & Profile
+
+    Guard->>Mobile: Install App & Authenticate via Clerk
+    Guard->>Mobile: Link Account & Access Gate Mode
+    Guard->>Mobile: Manage Visitor Entry, Exit & QR Verification
+```
+
+---
+
+## 👤 4. User Roles
+
+Foyer implements a multi-tier Role-Based Access Control (RBAC) model to ensure security and clear operational boundaries:
+
+| Role | Scope | Key Responsibilities |
+|---|---|---|
+| **Society Owner** | Society Creator / Top Executive | Bootstraps society, configures structural parameters, provisions initial Super Admins, and holds master administrative access. |
+| **Super Admin** | Platform / Executive Management | Manages multi-tower hierarchy, appends new towers, oversees platform operations, and provisions Society Admins. |
+| **Society Admin** | Day-to-Day Operations | Onboards residents and guards, updates flat assignments, posts announcements, and manages local community requests. |
+| **Resident** | Flat Occupant (Owner / Tenant) | Uses mobile app to manage flat profile, invite guests, book facilities, view announcements, and receive gate notifications. |
+| **Security Guard** | Gate Checkpoint Staff | Uses mobile app in Gate Mode to verify incoming guests, log entry/exit timestamps, and scan digital QR passes. |
+
+---
+
+## 📁 5. Repository Structure
+
+Foyer is organized as a monorepo containing three modular projects:
+
+```text
+foyer/
+├── foyer_server/       # Node.js / Express.js REST API & Core Engine
+├── foyer_web/          # Next.js 16 Administrative Web Dashboard
+└── foyer_mobile/       # Expo (v55) / React Native Cross-Platform Mobile App
+```
+
+---
+
+## 🏗️ 6. Project Structure
+
+### ⚙️ Backend (`foyer_server`)
+Follows a modular layered architecture with direct Mongoose ODM service integration and Zod input validation:
+
+```text
+foyer_server/src/
+├── config/         # Environment variables and database connection setup
+├── controllers/    # Express controllers parsing requests and invoking services
+├── middleware/     # Auth (Clerk), RBAC authorization checks, and Zod validators
+├── models/         # Mongoose schema definitions (Society, Tower, Flat, User)
+├── routes/         # Express API endpoint definitions
+├── services/       # Core business logic and ACID Mongoose transactions
+├── types/          # TypeScript interface definitions
+├── utils/          # Helper utilities (Unique ID generators, response builders)
+└── validators/     # Zod schemas for strict request body validation
+```
+
+### 💻 Web (`foyer_web`)
+Follows a feature-first Next.js 16 App Router architecture:
+
+```text
+foyer_web/src/
+├── app/            # Next.js App Router pages and layout components
+├── components/     # Reusable UI primitives and layout elements
+├── constants/      # App constants, navigation links, and configuration
+├── features/       # Feature modules (Society setup, Structure tree, User governance)
+├── hooks/          # Custom React hooks
+├── lib/            # Utility functions, Axios client, and Clerk configuration
+├── providers/      # React context providers (QueryClientProvider, Auth, Theme)
+├── services/       # API interaction layer for HTTP communication
+└── types/          # TypeScript definitions for web state and API models
+```
+
+### 📱 Mobile (`foyer_mobile`)
+Follows a feature-first Expo Router architecture with a design system engine:
+
+```text
+foyer_mobile/
+├── assets/         # App icons, splash screens, and image assets
+└── src/
+    ├── app/        # Expo Router file-based screens and stack navigators
+    ├── components/ # 19+ custom mobile UI primitives (Button, Card, Input, Sheet, etc.)
+    ├── constants/  # API endpoints, storage keys, and app defaults
+    ├── features/   # Mobile feature modules (Auth, Gate mode, Visitors, Community)
+    ├── hooks/      # Custom mobile hooks (Theme, Auth, Device state)
+    ├── lib/        # Storage helpers and utility functions
+    ├── providers/  # Global providers (Auth, QueryClient, Theme)
+    ├── store/      # Client-side state management
+    └── theme/      # Centralized design system (Plus Jakarta Sans typography, light/dark themes)
+```
+
+---
+
+## 🛠️ 7. Technology Stack
 
 | Domain | Layer / Tool | Technology |
 |---|---|---|
@@ -76,471 +220,162 @@ Foyer solves these challenges by providing:
 | | ODM & Database | Mongoose 9, MongoDB Atlas |
 | | Authentication | Clerk Express SDK (`@clerk/express`, `@clerk/backend`) |
 | | Validation | Zod |
-| | Build & Package Manager | `pnpm` (v11.9.0), `tsc`, `nodemon` |
-| **Web Frontend** | Framework | Next.js 16 (App Router), React 19 |
+| | Build Tools | `pnpm`, `tsc`, `nodemon` |
+| **Web Dashboard** | Framework | Next.js 16 (App Router), React 19 |
 | | Runtime & Package Manager | Bun |
-| | Styling | Tailwind CSS v4, Radix UI Primitives, Lucide Icons |
-| | State & Data Fetching | TanStack Query v5, Axios |
-| | Forms & Toasts | React Hook Form, Zod, Sonner |
+| | Styling & UI | Tailwind CSS v4, Radix UI Primitives, Lucide Icons |
+| | State & Fetching | TanStack Query v5, Axios |
+| | Forms & Toast | React Hook Form, Zod, Sonner |
 | **Mobile Client** | Framework | Expo (v55), React Native |
-| | Navigation & Router | Expo Router, React Navigation |
-| | Styling | Tailwind CSS v4, Uniwind, React Native Reanimated |
-| | Hardware Features | Expo Camera, Notifications, Secure Store |
+| | Routing & Nav | Expo Router, React Navigation |
+| | Styling & Motion | Tailwind CSS v4, Uniwind, React Native Reanimated |
+| | Typography & Design | Plus Jakarta Sans, 19+ Custom UI Primitives |
+| | Hardware Features | Expo Camera, Secure Store, Notifications |
+| **Infrastructure** | Database | MongoDB Atlas |
+| | Authentication | Clerk Auth Platform |
+| | Deployment | Node Server (Backend), Vercel (Web), EAS / Expo (Mobile) |
 
 ---
 
-## 🏗️ Architecture
-
-```mermaid
-graph TD
-    subgraph Clients
-        Web[Next.js 16 Web Portal]
-        Mobile[Expo React Native App]
-    end
-
-    subgraph Authentication
-        Clerk[Clerk Auth Provider]
-    end
-
-    subgraph Backend Services
-        API[Express REST API - foyer_server]
-        AuthMW[Clerk & Role Auth Middleware]
-        Services[Business Logic & Mongoose Transactions]
-    end
-
-    subgraph Database
-        Mongo[(MongoDB Database)]
-    end
-
-    Web -->|Google OAuth| Clerk
-    Mobile -->|Google OAuth| Clerk
-    Web -->|JWT Bearer Token| API
-    Mobile -->|JWT Bearer Token| API
-    API --> AuthMW
-    AuthMW --> Services
-    Services --> Mongo
-    Services -->|Fetch & Purge User| Clerk
-```
-
----
-
-## ⚙️ Backend Architecture
-
-The backend (`foyer_server`) follows a strict layered architecture designed for maintainability and data safety:
-
-```mermaid
-flowchart LR
-    Client([HTTP Request]) --> Routes[Routes]
-    Routes --> Middleware[Middleware: clerkAuth + roleAuth + Zod]
-    Middleware --> Controllers[Controllers]
-    Controllers --> Services[Services: Mongoose ODM]
-    Services --> Mongo[(MongoDB)]
-```
-
-### Architectural Principles:
-1. **Direct Mongoose ODM Service Layer**: Eliminated legacy repository abstraction wrappers. Controllers pass validated inputs directly to Service methods, which query Mongoose models.
-2. **ACID Transactions**: Operations touching multiple collections (e.g. creating a tower and all associated floor flats, or assigning a resident to a flat while updating occupancy state) use `mongoose.startSession()` transactions.
-3. **Zod Input Validation**: Request payloads are parsed and validated via Zod schemas in middleware before reaching controller logic.
-4. **Compound Unique Indexes**:
-   - `Tower`: `{ society: 1, name: 1 }` (unique)
-   - `Flat`: `{ society: 1, tower: 1, flatNumber: 1 }` (unique)
-   - `User`: `{ society: 1, uniqueId: 1 }` (unique)
-
----
-
-## 💻 Frontend Architecture
-
-The web dashboard (`foyer_web`) is structured using a **Feature-First Architecture** on Next.js 16:
-
-```
-foyer_web/src/
-├── app/                        # Next.js App Router (Routes & Layouts)
-│   ├── (auth)/                 # Public auth pages (Login)
-│   ├── (dashboard)/            # Protected governance dashboard
-│   │   ├── dashboard/          # Metrics overview
-│   │   ├── society/            # Society profile details
-│   │   ├── structure/          # Interactive tree & structure generator
-│   │   ├── users/              # User management & role assignment tabs
-│   │   └── profile/            # User account settings
-│   ├── society/register/       # Onboarding wizard for new society owners
-│   └── sso-callback/           # Clerk OAuth callback route
-├── components/                 # Shared UI & Shell Components
-│   ├── guards/                 # <AuthGuard> and <RoleGuard> HOCs
-│   ├── layout/                 # AppShell, Sidebar, Header, Breadcrumbs
-│   ├── shared/                 # DataTable, Status Badges, Spinners
-│   └── ui/                     # Base primitives (Button, Input, Dialog, Select)
-├── features/                   # Business Logic Modules
-│   ├── auth/                   # LoginForm & auth state management
-│   ├── society/                # RegisterSocietyForm & validators
-│   ├── structure/              # StructureTreeView, Expander & Lock Dialogs
-│   └── users/                  # UserTableTabs & CreateUser modals
-├── hooks/                      # Custom hooks (e.g. useAuthUser)
-├── providers/                  # QueryClient, Clerk, Theme, and Toast providers
-└── services/api/               # Axios client configuration & endpoint functions
-```
-
----
-
-## 📱 Mobile Architecture & Design System
-
-The mobile application (`foyer_mobile`) is engineered with Expo Router and features a decoupled, atomic design system:
-
-```
-foyer_mobile/
-├── assets/
-│   ├── fonts/                   # PlusJakartaSans (Regular, Medium, SemiBold, Bold)
-│   └── images/                  # Custom dark splash screens & icon assets
-├── src/
-│   ├── app/                     # Expo Router file-based screens
-│   │   ├── (app)/               # Protected app tabs & screens
-│   │   ├── (auth)/              # Authentication screens
-│   │   └── dev/                 # Live Component Showcase (/dev/design-system)
-│   ├── components/
-│   │   └── ui/                  # Design System Primitives
-│   │       ├── Avatar/          # AppAvatar & AppAvatarPicker
-│   │       ├── Badge/           # AppBadge & AppStatusPill
-│   │       ├── BottomSheet/     # AppBottomSheet modal
-│   │       ├── Button/          # AppButton & AppIconButton
-│   │       ├── Card/            # AppCard with variants
-│   │       ├── Chip/            # AppChip tags
-│   │       ├── Dialog/          # AppDialog popups
-│   │       ├── Divider/         # AppDivider
-│   │       ├── EmptyState/      # AppEmptyState illustrations
-│   │       ├── ListRow/         # AppListRow items
-│   │       ├── Loader/          # AppLoader indicator
-│   │       ├── OtpInput/        # AppOtpInput 4/6-digit code box
-│   │       ├── Screen/          # AppScreen Safe Area wrapper
-│   │       ├── SearchBar/       # AppSearchBar input
-│   │       ├── SegmentedControl/# AppSegmentedControl tab bar
-│   │       ├── TextField/       # AppTextField form control
-│   │       └── Typography/      # Typography engine
-│   ├── providers/               # AppProvider (Theme, Clerk, Query)
-│   └── theme/                   # HSL Color tokens, Light/Dark themes
-└── app.json                     # Expo branding & dark splash screen configuration
-```
-
----
-
-## 🔐 Authentication & Verification Flow
-
-MongoDB serves as the **Single Source of Truth** for user profiles, roles, and society associations, while Clerk handles **Identity Provider OAuth**.
-
-```mermaid
-sequenceDiagram
-    autonumber
-    actor User
-    participant Frontend as Web / Mobile
-    participant Clerk as Clerk OAuth
-    participant Backend as Express API
-    participant Mongo as MongoDB
-
-    User->>Frontend: Click "Sign in with Google"
-    Frontend->>Clerk: Authenticate via Google OAuth
-    Clerk-->>Frontend: Return Clerk JWT Token
-    User->>Frontend: Enter 6-Char Unique ID (e.g. RgvKtk)
-    Frontend->>Backend: POST /auth/complete-login (Bearer JWT + uniqueId)
-    Backend->>Mongo: Find User by uniqueId
-    Backend->>Clerk: Fetch Google account email via Clerk SDK
-    
-    alt Invalid Unique ID or Email Mismatch
-        Backend->>Clerk: Delete Clerk User Account (SDK)
-        Backend-->>Frontend: 403 Forbidden ("Email does not match registered account")
-    else Valid Unique ID & Matching Email
-        Backend->>Mongo: Save clerkId & set isVerified = true
-        Backend-->>Frontend: 200 OK (Return User Document + Society Info)
-    end
-```
-
----
-
-## 👤 User Roles & Operational Authority
-
-### 1. Owner (`owner`)
-- **Platform**: ✅ Web Portal | ❌ Mobile App
-- **Responsibilities**:
-  - Register new residential society and bootstrap owner profile.
-  - Generate initial society structure (towers, floors, flats).
-  - Expand existing society layout with new tower blocks.
-  - Create and assign `Super Admin` accounts.
-  - View master society analytics and settings.
-
-### 2. Super Admin (`super_admin`)
-- **Platform**: ✅ Web Portal | ❌ Mobile App
-- **Responsibilities**:
-  - Create and manage `Society Admin` accounts.
-  - Create `Resident` and `Security Guard` accounts.
-  - Monitor tower/flat occupancy and structure status.
-  - Manage overall user governance and assignments.
-
-### 3. Society Admin (`admin`)
-- **Platform**: ✅ Web Portal | ✅ Mobile App *(Planned)*
-- **Responsibilities**:
-  - Onboard residents and security personnel.
-  - Manage daily block operations and member records.
-  - View society structure and occupancy statistics.
-
-### 4. Resident (`resident`)
-- **Platform**: ❌ Web Portal | ✅ Mobile App *(Planned)*
-- **Responsibilities**:
-  - View personal flat details and assigned family members.
-  - Create gate passes for expected visitors *(Planned)*.
-  - Submit complaints and view society announcements *(Planned)*.
-
-### 5. Security Guard (`guard`)
-- **Platform**: ❌ Web Portal | ✅ Mobile App *(Planned)*
-- **Responsibilities**:
-  - Verify visitor codes at entry gates *(Planned)*.
-  - Log guest entry and exit times *(Planned)*.
-
----
-
-## 📱 Platform Breakdown
-
-| Role | Web Portal (`foyer_web`) | Mobile App (`foyer_mobile`) | Primary Usage Focus |
-|---|:---:|:---:|---|
-| **Owner** | ✅ | ❌ | Administrative onboarding, structure setup & executive control |
-| **Super Admin** | ✅ | ❌ | Society-wide governance, user creation & oversight |
-| **Society Admin** | ✅ | ✅ | Hybrid administrative oversight & block operations |
-| **Resident** | ❌ | ✅ | Day-to-day resident self-service, gate passes & notices |
-| **Guard** | ❌ | ✅ | Fast, gate-level access validation & visitor logging |
-
-**Why this division?**
-- **Web Portal** is optimized for high-density administrative workflows, multi-column data tables, tree layout visualization, and structure configuration wizards.
-- **Mobile App** is optimized for quick actions, hardware integrations (Camera for QR scanning, Push Notifications), and on-the-go access for residents and gate guards.
-
----
-
-## 📁 Monorepo Project Structure
-
-```
-foyer/
-├── foyer_server/             # Express.js REST API
-│   ├── src/
-│   │   ├── config/          # Database & environment initialization
-│   │   ├── controllers/     # HTTP endpoint handlers
-│   │   ├── middleware/      # Authentication, Authorization, Validation
-│   │   ├── models/          # Mongoose Schemas (User, Society, Tower, Flat)
-│   │   ├── routes/          # Express route definitions
-│   │   ├── services/        # Service layer & Mongoose transactions
-│   │   └── utils/           # ID generator & naming utilities
-│   ├── package.json
-│   └── tsconfig.json
-│
-├── foyer_web/                # Next.js 16 Web Dashboard
-│   ├── src/
-│   │   ├── app/             # App Router pages and layout groups
-│   │   ├── components/      # UI components, guards, layout shell
-│   │   ├── features/        # Business logic modules (auth, society, structure, users)
-│   │   ├── hooks/           # Custom React hooks
-│   │   ├── providers/       # Theme, QueryClient, Toast, Clerk providers
-│   │   ├── services/api/    # Axios client & API endpoints
-│   │   └── types/           # TypeScript definitions
-│   ├── .env.local
-│   ├── README.md
-│   └── package.json
-│
-└── foyer_mobile/             # Expo React Native Mobile App
-    ├── src/                 # Mobile screen navigation & components
-    ├── app.json             # Expo configuration
-    ├── README.md
-    └── package.json
-```
-
----
-
-## 🚀 Getting Started & Installation
+## 🚀 8. Getting Started
 
 ### Prerequisites
-- **Node.js**: `v20.0.0` or higher
-- **Bun**: `v1.1.0` or higher (Recommended for `foyer_web`)
-- **pnpm**: `v9.0.0` or higher (Recommended for `foyer_server`)
-- **MongoDB**: Active local instance or MongoDB Atlas connection string
-- **Clerk Account**: API credentials from [Clerk Dashboard](https://clerk.com)
-
----
+- **Node.js**: `>= 20.0.0`
+- **Package Managers**: `pnpm` (v11.9+) and `bun`
+- **Database**: Local MongoDB instance or MongoDB Atlas URI
+- **Authentication**: Clerk Account & API Keys
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/your-username/foyer.git
+git clone https://github.com/ShubaBhardwaj/Foyer.git
 cd foyer
 ```
 
----
-
-### 2. Backend Setup (`foyer_server`)
-
+### 2. Setup Backend (`foyer_server`)
 ```bash
 cd foyer_server
-
-# Install dependencies using pnpm
 pnpm install
 
 # Create environment file
 cp .env.example .env
 ```
-
-Configure `.env` in `foyer_server`:
+Configure `.env`:
 ```env
-PORT=8000
-MONGO_URI=mongodb://localhost:27017/foyer
+PORT=5001
+MONGODB_URI=mongodb+srv://<username>:<password>@cluster.mongodb.net/foyer
 CLERK_PUBLISHABLE_KEY=pk_test_...
 CLERK_SECRET_KEY=sk_test_...
 ```
-
-Start dev server:
+Start development server:
 ```bash
-pnpm run dev
+pnpm dev
 ```
-The server will start on `http://localhost:8000`.
 
----
-
-### 3. Web Frontend Setup (`foyer_web`)
-
+### 3. Setup Web Dashboard (`foyer_web`)
 ```bash
 cd ../foyer_web
-
-# Install dependencies using Bun
 bun install
-
-# Create environment file
-cp .env.example .env.local
 ```
-
-Configure `.env.local` in `foyer_web`:
+Configure `.env.local`:
 ```env
 NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...
 CLERK_SECRET_KEY=sk_test_...
-NEXT_PUBLIC_API_URL=http://localhost:8000
+NEXT_PUBLIC_API_URL=http://localhost:5001/api
 ```
-
-Start dev server:
+Start web development server:
 ```bash
 bun dev
 ```
-The web portal will open at `http://localhost:3000`.
 
----
-
-### 4. Mobile App Setup (`foyer_mobile`)
-
+### 4. Setup Mobile Application (`foyer_mobile`)
 ```bash
 cd ../foyer_mobile
-
-# Install dependencies
 bun install
-
-# Start Expo dev server
-npx expo start
+```
+Configure `.env`:
+```env
+EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...
+EXPO_PUBLIC_API_URL=http://<YOUR_LOCAL_IP>:5001/api
+```
+Start Expo development server:
+```bash
+bun start
 ```
 
 ---
 
-## 🔑 Environment Variables Reference
+## ⚡ 9. Current Features
 
-### Backend (`foyer_server/.env`)
-
-| Variable | Description | Example |
-|---|---|---|
-| `PORT` | Port number for Express API server | `8000` |
-| `MONGO_URI` | Connection URI for MongoDB instance / Atlas cluster | `mongodb://localhost:27017/foyer` |
-| `CLERK_PUBLISHABLE_KEY` | Clerk Publishable API key used for JWT verification | `pk_test_Y2xhc3NpYy...` |
-| `CLERK_SECRET_KEY` | Clerk Secret API key used for backend SDK actions (e.g. deleting users) | `sk_test_GTjcKY9y...` |
-
-### Web Frontend (`foyer_web/.env.local`)
-
-| Variable | Description | Example |
-|---|---|---|
-| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Public Clerk key for frontend sign-in components | `pk_test_Y2xhc3NpYy...` |
-| `CLERK_SECRET_KEY` | Server-side Clerk key for Next.js SSR functions | `sk_test_GTjcKY9y...` |
-| `NEXT_PUBLIC_API_URL` | Base HTTP endpoint URL for `foyer_server` backend | `http://localhost:8000` |
+| Feature Status | Capability Description |
+|---|---|
+| **✅ Implemented** | • **Google OAuth via Clerk**: Secure sign-in for Web and Mobile.<br>• **Account Linking**: 6-character Unique ID verification (`RgvKtk`) with auto-cleanup of invalid attempts.<br>• **Society Wizard**: Interactive society creation & administrative setup.<br>• **Structure Generator**: Programmatic multi-tower hierarchy generator (Towers → Floors → Flats).<br>• **Structure Expander**: Sequential tower expansion (`A, B... Z, A1`) with occupancy lock checks.<br>• **Visual Hierarchy Tree**: Live tree view with occupancy status tracking (`Vacant` / `Occupied`).<br>• **Multi-Tier RBAC**: Enforced permissions across 5 roles (Owner, Super Admin, Society Admin, Resident, Guard).<br>• **Mobile Design System Engine**: 19+ custom components powered by Plus Jakarta Sans typography and HSL themes. |
+| **🚧 In Progress** | • Resident Visitor Pass pre-authorization & invitation generation.<br>• Security Guard Gate Mode QR code verification.<br>• Real-time push notification gateway for gate events. |
+| **📅 Planned** | • Society Digital Notice Board & Broadcasts.<br>• Facility & Amenity Slot Reservations.<br>• Complaint & Maintenance Ticketing Workflows.<br>• Online Maintenance Fee Payment Integration. |
 
 ---
 
-## 🌐 API Overview
+## 📐 10. Architecture Overview
 
-| Method | Path | Required Auth | Allowed Roles | Description |
-|---|---|:---:|---|---|
-| `GET` | `/` | None | Public | Health check endpoint |
-| `POST` | `/auth/complete-login` | Clerk JWT | Any User | Completes 1st-time code verification or standard login |
-| `GET` | `/auth/me` | Clerk JWT | Any Linked User | Returns current user profile and society data |
-| `POST` | `/society/register` | Clerk JWT | Bootstrap | Registers new society and initial `owner` account |
-| `GET` | `/society/me` | Clerk JWT | Any Linked User | Returns society details for the authenticated user |
-| `POST` | `/society/structure` | Clerk JWT | `owner`, `super_admin` | Generates initial tower and flat hierarchy |
-| `POST` | `/society/structure/expand` | Clerk JWT | `owner`, `super_admin` | Expands structure with new tower blocks |
-| `PATCH` | `/society/structure` | Clerk JWT | `owner`, `super_admin` | Bulk updates towers/flats (enforces Structure Lock) |
-| `GET` | `/society/structure` | Clerk JWT | `owner`, `super_admin`, `admin` | Fetches complete society hierarchy tree |
-| `POST` | `/user/super-admin` | Clerk JWT | `owner` | Creates a Super Admin account |
-| `POST` | `/user/admin` | Clerk JWT | `super_admin` | Creates a Society Admin account |
-| `POST` | `/user/resident` | Clerk JWT | `super_admin`, `admin` | Creates a Resident account & links to flat |
-| `POST` | `/user/guard` | Clerk JWT | `super_admin`, `admin` | Creates a Security Guard account |
+```mermaid
+flowchart TB
+    subgraph Authentication ["🔐 Identity & Auth Provider"]
+        Clerk["Clerk Auth Engine\n(Google OAuth & Token Service)"]
+    end
 
----
+    subgraph Clients ["📱 💻 Frontend Clients"]
+        Web["foyer_web\n(Next.js 16 Web Dashboard)"]
+        Mobile["foyer_mobile\n(Expo React Native App)"]
+    end
 
-## 🔒 Security Architecture
+    subgraph Backend ["⚡ Server Tier"]
+        API["foyer_server\n(Express.js REST API)"]
+        Middleware["Auth & RBAC Middleware\n(Token Verification & Permission Checks)"]
+        Services["Business Services Layer\n(ACID Mongoose Transactions)"]
+    end
 
-1. **Strict Server-Side Role Enforcement**:
-   - Middleware extracts the Clerk JWT, looks up the corresponding MongoDB user record, and checks `user.roles` against route requirements before proceeding.
-2. **Owner Role Safeguard**:
-   - `UserService.createUser()` explicitly rejects attempts to pass `owner` as a target role with a `403 Forbidden` response. The `owner` role can only be instantiated via `/society/register`.
-3. **Clerk Account Cleanup on First Login**:
-   - Prevents stale or unauthorized Clerk accounts from occupying space. If code validation fails, the backend triggers `clerkClient.users.deleteUser(clerkUserId)`.
-4. **Structure Lock Safeguard**:
-   - Before modifying or deleting any tower, `StructureService.checkStructureLock(towerId)` checks if any flat in that tower has `occupied: true`. If found, a `409 Conflict` error blocks the operation.
-5. **ACID Transactions**:
-   - All multi-document Mongoose operations run inside sessions to prevent partial state writes on database errors.
+    subgraph Data ["💾 Data Tier"]
+        Mongo[("MongoDB Database\n(Atlas Cluster / Mongoose 9)")]
+    end
 
----
+    Web -->|1. Authenticate / OAuth| Clerk
+    Mobile -->|1. Authenticate / OAuth| Clerk
 
-## 📊 Current Implementation Status
+    Web -->|2. HTTP Request + Bearer Token| API
+    Mobile -->|2. HTTP Request + Bearer Token| API
 
-### ✅ Implemented
-- [x] Express REST API core with TypeScript & Mongoose ODM.
-- [x] Clerk OAuth authentication + 6-character Unique ID account linking.
-- [x] Automatic cleanup of invalid Clerk user accounts.
-- [x] Multi-tier role permissions (`owner`, `super_admin`, `admin`, `resident`, `guard`).
-- [x] Society registration and bootstrap onboarding.
-- [x] Dynamic structure generator and expander logic with formulas.
-- [x] Structure Lock mechanism preventing edit/delete of occupied towers.
-- [x] Compound unique database indexes across Tower, Flat, and User models.
-- [x] Next.js 16 Web Governance Portal with feature-first layout.
-- [x] Interactive Hierarchy Tree View with occupancy filter controls.
-- [x] User management portal with tabbed views for all roles.
-- [x] Centralized Axios client with Clerk JWT token injection.
-- [x] Custom mobile native splash screen & Dark Slate (`#0F172A`) branding theme.
-- [x] Mobile typography system powered by Plus Jakarta Sans font weights.
-- [x] 19+ modern mobile UI component primitives (`AppButton`, `AppBottomSheet`, `AppOtpInput`, `AppAvatarPicker`, etc.).
-- [x] Dynamic light/dark mode theme system (`theme.ts`) & AppProvider context.
-- [x] Live interactive mobile design system showcase screen (`/dev/design-system`).
-
-### 🟡 In Progress
-- [ ] Mobile App authentication flow integration with Clerk & backend.
-- [ ] Mobile user dashboard for residents and guards.
-
-### 🔮 Planned (Roadmap)
-- [ ] Visitor Gate Pass Generation & QR Scanning.
-- [ ] Digital Notice Board & Push Notifications.
-- [ ] Complaint & Ticket Tracking System.
-- [ ] Facility & Amenity Reservation.
-- [ ] Society Maintenance Fee Payment Gateway Integration.
+    API --> Middleware
+    Middleware -->|3. Validate Bearer Token| Clerk
+    Middleware --> Services
+    Services -->|4. Execute Queries & Transactions| Mongo
+    Services -->|5. Sync / Cleanup Account State| Clerk
+```
 
 ---
 
-## 🤝 Contributing
+## 🔮 11. Future Roadmap
 
-Contributions to **Foyer** are welcome! Please follow these steps:
-1. Fork the repository.
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`).
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`).
-4. Push to the branch (`git push origin feature/AmazingFeature`).
-5. Open a Pull Request.
-
----
-
-## 📜 License
-
-This project is licensed under the **ISC License**. See the `package.json` files for details.
+- 🎫 **Visitor & Gate Management**: Digital gate passes, pre-approved entry codes, delivery tracking, and guard QR code scanning.
+- 🏊 **Amenities & Bookings**: Slot reservation engine for clubhouses, sports courts, pools, and event halls.
+- 🛠️ **Complaints & Maintenance**: Ticketing workflow for facility repairs, SLA tracking, and staff assignments.
+- 📢 **Community Feed & Notices**: Digital notice board, polls, and emergency broadcasts.
+- 💳 **Payments & Billing**: Automated maintenance bill generation, online payment integration, and transaction receipts.
+- 📊 **Analytics & Reporting**: Occupancy insights, gate traffic metrics, and administrative audit logs.
+- 🔔 **Real-Time Notifications**: Instant mobile push notifications for guest arrivals, gate approvals, and notice alerts.
 
 ---
 
-*Foyer Enterprise Platform © 2026. Designed and engineered for modern society management.*
+## 🤝 12. Contributing
+
+Contributions make the open-source community an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
+
+1. Fork the Project
+2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the Branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+---
+
+## 📄 13. License
+
+Distributed under the **MIT License**. See `LICENSE` for more information.
