@@ -33,7 +33,13 @@ export enum AuditAction {
   AMENITY_CANCELLED = "AMENITY_CANCELLED",
   BOOKING_CREATED = "BOOKING_CREATED",
   BOOKING_APPROVED = "BOOKING_APPROVED",
-  BOOKING_CANCELLED = "BOOKING_CANCELLED",
+  // Polls & Voting Module
+  POLL_CREATED = "POLL_CREATED",
+  POLL_UPDATED = "POLL_UPDATED",
+  POLL_PUBLISHED = "POLL_PUBLISHED",
+  POLL_CLOSED = "POLL_CLOSED",
+  POLL_VOTED = "POLL_VOTED",
+  POLL_DELETED = "POLL_DELETED",
 
   // User & Account Module
   USER_CREATED = "USER_CREATED",
@@ -60,6 +66,8 @@ export enum AuditResourceType {
   AMENITY = "Amenity",
   BOOKING = "Booking",
   AMENITY_BOOKING = "Booking",
+  POLL = "Poll",
+  VOTE = "Vote",
   USER = "User",
   SOCIETY = "Society",
   STRUCTURE = "Structure",
