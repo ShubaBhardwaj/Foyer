@@ -17,6 +17,7 @@ import { invoiceRouter } from "./routes/invoice.routes";
 import { paymentRouter } from "./routes/payment.routes";
 import { communityRouter } from "./routes/community.routes";
 import { dashboardRouter } from "./routes/dashboard.routes";
+import { notificationCenterRouter } from "./routes/notification.routes";
 import errorMiddleware from "./middleware/errorMiddleware";
 
 const app = express();
@@ -41,6 +42,7 @@ app.use("/invoices", invoiceRouter);
 app.use("/payments", paymentRouter);
 app.use("/community", communityRouter);
 app.use("/dashboard", dashboardRouter);
+app.use("/notifications", notificationCenterRouter);
 
 // Health check
 app.get("/", (_req, res) => {
