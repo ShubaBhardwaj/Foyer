@@ -1,9 +1,10 @@
 import { Router } from "express";
 import clerkAuth from "../middleware/clerkAuth";
-import { requireLinkedAccount, requireRole } from "../middleware/roleAuth";
+import { requireLinkedAccount } from "../middleware/roleAuth";
+import { requirePermission } from "../middleware/requirePermission";
 import { validate } from "../middleware/validate";
 import visitorController from "../controllers/visitor.controller";
-import { Role } from "../models/User";
+import { Permission } from "../constants/permissions";
 import {
   createVisitorSchema,
   updateVisitorSchema,
@@ -21,13 +22,13 @@ export const visitorRouter = Router();
 /**
  * POST /visitors
  * Create a new visitor request (Resident pre-approval or Guard walk-in).
- * Allowed: RESIDENT, GUARD.
+ * Required Permission: VISITOR_CREATE
  */
 visitorRouter.post(
   "/",
   clerkAuth,
   requireLinkedAccount,
-  requireRole(Role.RESIDENT, Role.GUARD),
+  requirePermission(Permission.VISITOR_CREATE),
   validate(createVisitorSchema),
   visitorController.createVisitor.bind(visitorController)
 );
@@ -35,13 +36,13 @@ visitorRouter.post(
 /**
  * GET /visitors
  * List visitors for authenticated user's society with filtering and pagination.
- * Allowed: RESIDENT, ADMIN, SUPER_ADMIN, OWNER (Guards excluded from full history).
+ * Required Permission: VISITOR_READ
  */
 visitorRouter.get(
   "/",
   clerkAuth,
   requireLinkedAccount,
-  requireRole(Role.RESIDENT, Role.ADMIN, Role.SUPER_ADMIN, Role.OWNER),
+  requirePermission(Permission.VISITOR_READ),
   validate(listVisitorsSchema, "query"),
   visitorController.listVisitors.bind(visitorController)
 );
@@ -49,19 +50,13 @@ visitorRouter.get(
 /**
  * GET /visitors/:id
  * Get details for a specific visitor request.
- * Allowed: RESIDENT, GUARD, ADMIN, SUPER_ADMIN, OWNER.
+ * Required Permission: VISITOR_READ
  */
 visitorRouter.get(
   "/:id",
   clerkAuth,
   requireLinkedAccount,
-  requireRole(
-    Role.RESIDENT,
-    Role.GUARD,
-    Role.ADMIN,
-    Role.SUPER_ADMIN,
-    Role.OWNER
-  ),
+  requirePermission(Permission.VISITOR_READ),
   validate(visitorIdParamsSchema, "params"),
   visitorController.getVisitor.bind(visitorController)
 );
@@ -69,13 +64,13 @@ visitorRouter.get(
 /**
  * PATCH /visitors/:id
  * Update visitor details (permitted only in PENDING or APPROVED status).
- * Allowed: RESIDENT only.
+ * Required Permission: VISITOR_CREATE
  */
 visitorRouter.patch(
   "/:id",
   clerkAuth,
   requireLinkedAccount,
-  requireRole(Role.RESIDENT),
+  requirePermission(Permission.VISITOR_CREATE),
   validate(visitorIdParamsSchema, "params"),
   validate(updateVisitorSchema),
   visitorController.updateVisitor.bind(visitorController)
@@ -84,13 +79,13 @@ visitorRouter.patch(
 /**
  * DELETE /visitors/:id
  * Soft-delete a visitor request.
- * Allowed: RESIDENT only.
+ * Required Permission: VISITOR_DELETE
  */
 visitorRouter.delete(
   "/:id",
   clerkAuth,
   requireLinkedAccount,
-  requireRole(Role.RESIDENT),
+  requirePermission(Permission.VISITOR_DELETE),
   validate(visitorIdParamsSchema, "params"),
   visitorController.deleteVisitor.bind(visitorController)
 );
@@ -98,13 +93,13 @@ visitorRouter.delete(
 /**
  * POST /visitors/:id/approve
  * Resident approves a PENDING visitor request.
- * Allowed: RESIDENT only.
+ * Required Permission: VISITOR_APPROVE
  */
 visitorRouter.post(
   "/:id/approve",
   clerkAuth,
   requireLinkedAccount,
-  requireRole(Role.RESIDENT),
+  requirePermission(Permission.VISITOR_APPROVE),
   validate(visitorIdParamsSchema, "params"),
   validate(approveVisitorSchema),
   visitorController.approveVisitor.bind(visitorController)
@@ -113,13 +108,13 @@ visitorRouter.post(
 /**
  * POST /visitors/:id/reject
  * Resident rejects a PENDING visitor request with mandatory reason.
- * Allowed: RESIDENT only.
+ * Required Permission: VISITOR_REJECT
  */
 visitorRouter.post(
   "/:id/reject",
   clerkAuth,
   requireLinkedAccount,
-  requireRole(Role.RESIDENT),
+  requirePermission(Permission.VISITOR_REJECT),
   validate(visitorIdParamsSchema, "params"),
   validate(rejectVisitorSchema),
   visitorController.rejectVisitor.bind(visitorController)
@@ -128,13 +123,13 @@ visitorRouter.post(
 /**
  * POST /visitors/:id/cancel
  * Resident cancels a PENDING or APPROVED visitor pass.
- * Allowed: RESIDENT only.
+ * Required Permission: VISITOR_CREATE or VISITOR_DELETE
  */
 visitorRouter.post(
   "/:id/cancel",
   clerkAuth,
   requireLinkedAccount,
-  requireRole(Role.RESIDENT),
+  requirePermission(Permission.VISITOR_CREATE, Permission.VISITOR_DELETE),
   validate(visitorIdParamsSchema, "params"),
   validate(cancelVisitorSchema),
   visitorController.cancelVisitor.bind(visitorController)
@@ -143,13 +138,13 @@ visitorRouter.post(
 /**
  * POST /visitors/:id/check-in
  * Guard checks in an APPROVED visitor.
- * Allowed: GUARD only.
+ * Required Permission: VISITOR_CHECKIN
  */
 visitorRouter.post(
   "/:id/check-in",
   clerkAuth,
   requireLinkedAccount,
-  requireRole(Role.GUARD),
+  requirePermission(Permission.VISITOR_CHECKIN),
   validate(visitorIdParamsSchema, "params"),
   validate(checkInVisitorSchema),
   visitorController.checkInVisitor.bind(visitorController)
@@ -158,13 +153,13 @@ visitorRouter.post(
 /**
  * POST /visitors/:id/check-out
  * Guard checks out a CHECKED_IN visitor.
- * Allowed: GUARD only.
+ * Required Permission: VISITOR_CHECKOUT
  */
 visitorRouter.post(
   "/:id/check-out",
   clerkAuth,
   requireLinkedAccount,
-  requireRole(Role.GUARD),
+  requirePermission(Permission.VISITOR_CHECKOUT),
   validate(visitorIdParamsSchema, "params"),
   validate(checkOutVisitorSchema),
   visitorController.checkOutVisitor.bind(visitorController)
