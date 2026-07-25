@@ -1,50 +1,75 @@
-import { useState, useMemo, useCallback } from "react";
-import { communityPosts } from "../../shared/data/communityDummyData";
+import { useState, useMemo } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query-keys";
+import { communityRepository } from "@/repositories/community.repository";
+import { CreateCommunityPostRequestDto } from "@/types/api/community";
 import { CommunityPost } from "../types/post.types";
 
 export function usePosts() {
-  const [posts, setPosts] = useState<CommunityPost[]>(communityPosts);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedFilter, setSelectedFilter] = useState<string>("All");
-  const [isLoading, setIsLoading] = useState(false);
+  const queryClient = useQueryClient();
+
+  const queryParams = useMemo(() => {
+    const params: { category?: string } = {};
+    if (selectedFilter !== "All") params.category = selectedFilter.toUpperCase();
+    return params;
+  }, [selectedFilter]);
+
+  const {
+    data,
+    isLoading,
+    isRefetching,
+    refetch,
+    isError,
+    error,
+  } = useQuery({
+    queryKey: queryKeys.community.posts(queryParams),
+    queryFn: () => communityRepository.fetchPosts(queryParams),
+  });
+
+  const posts = useMemo<CommunityPost[]>(() => {
+    const list = data?.posts || [];
+    return list.map((p) => ({
+      id: p._id,
+      _id: p._id,
+      authorName: p.author?.name || "Community Member",
+      authorRole: p.author?.flatNumber ? `Flat ${p.author.flatNumber}` : "Resident",
+      initials: (p.author?.name || "CM").slice(0, 2).toUpperCase(),
+      timeAgo: "Recently",
+      title: p.content.slice(0, 40) || "Post",
+      content: p.content,
+      category: p.category as any,
+      likesCount: p.likesCount || 0,
+      commentsCount: p.commentsCount || 0,
+      isLiked: p.isLikedByMe,
+      images: p.images,
+    }));
+  }, [data?.posts]);
 
   const filteredPosts = useMemo(() => {
-    return posts.filter((post) => {
-      const matchesSearch =
-        searchQuery.trim() === "" ||
-        post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        post.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        post.authorName.toLowerCase().includes(searchQuery.toLowerCase());
-
-      if (!matchesSearch) return false;
-
-      switch (selectedFilter) {
-        case "Pinned":
-          return Boolean(post.isPinned);
-        case "Discussions":
-          return post.category === "Discussion" || post.category === "General";
-        case "Notices":
-          return post.category === "Announcement" || post.category === "Maintenance";
-        default:
-          return true;
-      }
-    });
-  }, [posts, searchQuery, selectedFilter]);
-
-  const handleToggleLike = useCallback((postId: string) => {
-    // TODO: Call API endpoint POST /api/v1/community/posts/:id/like
-    setPosts((prev) =>
-      prev.map((p) =>
-        p.id === postId
-          ? {
-              ...p,
-              isLiked: !p.isLiked,
-              likesCount: p.isLiked ? p.likesCount - 1 : p.likesCount + 1,
-            }
-          : p
-      )
+    if (!searchQuery.trim()) return posts;
+    const lower = searchQuery.toLowerCase();
+    return posts.filter(
+      (p) =>
+        p.content.toLowerCase().includes(lower) ||
+        p.authorName.toLowerCase().includes(lower)
     );
-  }, []);
+  }, [posts, searchQuery]);
+
+  const toggleReactionMutation = useMutation({
+    mutationFn: (postId: string) => communityRepository.togglePostReaction(postId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.community.all });
+    },
+  });
+
+  const createPostMutation = useMutation({
+    mutationFn: (dto: CreateCommunityPostRequestDto) => communityRepository.createPost(dto),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.community.all });
+    },
+  });
 
   return {
     posts: filteredPosts,
@@ -53,8 +78,15 @@ export function usePosts() {
     setSearchQuery,
     selectedFilter,
     setSelectedFilter,
+    selectedCategory: selectedFilter,
+    setSelectedCategory: setSelectedFilter,
     isLoading,
-    setIsLoading,
-    handleToggleLike,
+    isRefetching,
+    isError,
+    error,
+    refetch,
+    handleToggleLike: (postId: string) => toggleReactionMutation.mutate(postId),
+    createPost: (dto: CreateCommunityPostRequestDto) => createPostMutation.mutateAsync(dto),
+    isCreating: createPostMutation.isPending,
   };
 }

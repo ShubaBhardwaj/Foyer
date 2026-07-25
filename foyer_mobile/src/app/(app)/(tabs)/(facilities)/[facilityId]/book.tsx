@@ -7,7 +7,6 @@ import {
   AppButton,
   AppCard,
   AppSectionHeader,
-  Caption,
   Body,
 } from "@/components/ui";
 import { useAppTheme, spacing } from "@/theme";
@@ -25,46 +24,47 @@ export default function BookFacilityScreen() {
   const router = useRouter();
   const { facilityId } = useLocalSearchParams<{ facilityId: string }>();
 
-  const { facility } = useFacilityDetails(facilityId);
-  const { selectedDate, selectedSlot } = useAvailability(facilityId);
+  const { facility } = useFacilityDetails(facilityId || "");
+  const { selectedDate, selectedSlot } = useAvailability(facilityId || "");
 
   const [purpose, setPurpose] = useState("");
   const [notes, setNotes] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleConfirmBooking = async () => {
+    if (!facilityId) return;
     setIsSubmitting(true);
-    // TODO: Replace dummy booking creation with POST /api/v1/facilities/:id/bookings API call
-    await createFacilityBooking(facilityId ?? "fac_001", {
-      date: selectedDate,
-      timeSlot: selectedSlot?.time ?? "07:00 AM - 08:00 AM",
-      purpose,
-      notes,
-    });
-    setIsSubmitting(false);
-
-    router.push(`/(app)/(tabs)/(facilities)/${facilityId}/confirmation` as any);
+    try {
+      await createFacilityBooking({
+        amenityId: facilityId,
+        bookingDate: selectedDate || new Date().toISOString().split("T")[0],
+        startTime: selectedSlot?.time.split(" - ")[0] || "09:00 AM",
+        endTime: selectedSlot?.time.split(" - ")[1] || "10:00 AM",
+      });
+      router.push(`/(app)/(tabs)/(facilities)/${facilityId}/confirmation` as any);
+    } catch (err) {
+      console.warn("Failed to create booking:", err);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
     <AppScreen scrollable={true} statusBarStyle="auto">
-      {/* ─── Header ──────────────────────────────────────────────────────── */}
       <FacilitiesHeader
         title="Book Facility"
         showBack={true}
         onBackPress={() => router.back()}
       />
 
-      {/* ─── Booking Order Summary ───────────────────────────────────────── */}
       {facility && (
         <BookingSummary
           facility={facility}
           date={selectedDate}
-          slot={selectedSlot}
+          slot={selectedSlot || undefined}
         />
       )}
 
-      {/* ─── Purpose & Notes Input Form ─────────────────────────────────── */}
       <AppSectionHeader title="Booking Purpose & Details" />
       <AppCard variant="outlined" style={styles.cardSection}>
         <AppTextField
@@ -83,7 +83,6 @@ export default function BookFacilityScreen() {
         />
       </AppCard>
 
-      {/* ─── Booking Rules Disclaimer ───────────────────────────────────── */}
       <AppSectionHeader title="Terms & Cancellation Policy" />
       <AppCard variant="outlined" style={styles.rulesNotice}>
         <ShieldAlert size={18} color={theme.colors.primary} />
@@ -92,7 +91,6 @@ export default function BookFacilityScreen() {
         </Body>
       </AppCard>
 
-      {/* ─── Confirm Booking Action Button ──────────────────────────────── */}
       <View style={styles.submitContainer}>
         <AppButton
           label="Confirm & Reserve Facility"

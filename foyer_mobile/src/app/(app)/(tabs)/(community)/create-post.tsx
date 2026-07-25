@@ -34,27 +34,27 @@ export default function CreatePostScreen() {
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
-    // TODO: Replace dummy post creation with POST /api/v1/community/posts API call
-    await createPost({
-      title,
-      content,
-      category,
-    });
-    setIsSubmitting(false);
-
-    router.back();
+    try {
+      await createPost({
+        content: title ? `${title}\n\n${content}` : content,
+        category,
+      });
+      router.back();
+    } catch (err) {
+      console.warn("Failed to create post:", err);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
     <AppScreen scrollable={true} statusBarStyle="auto">
-      {/* ─── Header ──────────────────────────────────────────────────────── */}
       <CommunityHeader
         title="Create Post"
         showBack={true}
         onBackPress={() => router.back()}
       />
 
-      {/* ─── Post Information Form ─────────────────────────────────────── */}
       <AppSectionHeader title="Post Details" />
       <AppCard variant="outlined" style={styles.cardSection}>
         <AppTextField
@@ -74,7 +74,6 @@ export default function CreatePostScreen() {
         />
       </AppCard>
 
-      {/* ─── Category Selection ────────────────────────────────────────── */}
       <AppSectionHeader title="Post Category" />
       <View style={styles.categoryRow}>
         {(["Discussion", "Announcement", "Maintenance"] as const).map((cat) => (
@@ -116,20 +115,6 @@ export default function CreatePostScreen() {
         ))}
       </View>
 
-      {/* ─── Image Attachment Placeholder ─────────────────────────────── */}
-      <AppSectionHeader title="Attachments (Optional)" />
-      <AppCard variant="outlined" style={styles.attachmentBox}>
-        {/* TODO: Image picker library integration */}
-        <ImageIcon size={32} color={theme.colors.primary} />
-        <Body style={{ color: theme.colors.onSurface, marginTop: spacing.xs }}>
-          Tap to Upload Photo / PDF Document
-        </Body>
-        <Caption style={{ color: theme.colors.outline, marginTop: 2 }}>
-          Image Attachment Placeholder (PNG, JPG up to 10MB)
-        </Caption>
-      </AppCard>
-
-      {/* ─── Submit Action Button ──────────────────────────────────────── */}
       <View style={styles.submitContainer}>
         <AppButton
           label="Publish Post"
@@ -165,13 +150,6 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     borderWidth: 1,
     gap: spacing.xs,
-  },
-  attachmentBox: {
-    alignItems: "center",
-    justifyContent: "center",
-    padding: spacing.xl,
-    borderStyle: "dashed",
-    marginBottom: spacing.md,
   },
   submitContainer: {
     marginVertical: spacing.lg,

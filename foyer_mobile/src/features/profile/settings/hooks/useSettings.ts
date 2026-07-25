@@ -1,24 +1,24 @@
-import { useState, useCallback } from "react";
-import { initialAppSettings } from "../../shared/data/profileDummyData";
+import { useState } from "react";
 import { AppSettings } from "../../shared/types/profile.types";
 
 export function useSettings() {
-  const [settings, setSettings] = useState<AppSettings>(initialAppSettings);
+  const [settings, setSettings] = useState<AppSettings>({
+    darkMode: false,
+    language: "English",
+    appVersion: "1.0.0",
+    buildNumber: "100",
+    cacheSize: "12.4 MB",
+    developerOptions: false,
+    experimentalFeatures: false,
+  });
 
-  const handleToggleDarkMode = useCallback(() => {
-    setSettings((prev: AppSettings) => ({ ...prev, darkMode: !prev.darkMode }));
-  }, []);
-
-  const handleToggleExperimental = useCallback(() => {
-    setSettings((prev: AppSettings) => ({ ...prev, experimentalFeatures: !prev.experimentalFeatures }));
-  }, []);
-
-  const handleToggleDeveloper = useCallback(() => {
-    setSettings((prev: AppSettings) => ({ ...prev, developerOptions: !prev.developerOptions }));
-  }, []);
+  const handleToggleDarkMode = () => setSettings((prev: AppSettings) => ({ ...prev, darkMode: !prev.darkMode }));
+  const handleToggleExperimental = () => setSettings((prev: AppSettings) => ({ ...prev, experimentalFeatures: !prev.experimentalFeatures }));
+  const handleToggleDeveloper = () => setSettings((prev: AppSettings) => ({ ...prev, developerOptions: !prev.developerOptions }));
 
   return {
     settings,
+    setSettings,
     handleToggleDarkMode,
     handleToggleExperimental,
     handleToggleDeveloper,

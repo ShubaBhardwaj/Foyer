@@ -1,5 +1,22 @@
+import { CommunityCategoryFilter } from "./shared/components/CommunityFilters";
+import { CommunityStatistic } from "./shared/components/CommunityStatistics";
+
+export const communityCategoryFilters: CommunityCategoryFilter[] = [
+  "All",
+  "Discussions",
+  "Polls",
+  "Notices",
+  "Events",
+];
+
+export const communityStatistics: CommunityStatistic[] = [
+  { id: "stat_1", title: "Discussions", value: "12", caption: "Active posts", iconName: "MessageSquare" },
+  { id: "stat_2", title: "Active Polls", value: "3", caption: "Cast vote", iconName: "Vote" },
+  { id: "stat_3", title: "Notices", value: "5", caption: "Broadcasted", iconName: "Bell" },
+  { id: "stat_4", title: "Events", value: "2", caption: "Upcoming", iconName: "Calendar" },
+];
+
 // Shared
-export * from "./shared/data/communityDummyData";
 export * from "./shared/api/community.service";
 export { CommunityHeader } from "./shared/components/CommunityHeader";
 export { CommunityStatistics } from "./shared/components/CommunityStatistics";

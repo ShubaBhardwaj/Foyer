@@ -1,3 +1,4 @@
+import type { ViewStyle } from "react-native";
 import type { LucideIcon } from "lucide-react-native";
 
 export type ButtonVariant = "filled" | "tonal" | "outlined" | "text" | "danger";
@@ -22,6 +23,8 @@ export interface AppButtonProps {
   onPress?: () => void;
   /** Full width */
   fullWidth?: boolean;
+  /** Additional style overrides */
+  style?: ViewStyle | ViewStyle[];
   /** Accessibility label */
   accessibilityLabel?: string;
   /** Accessibility hint */

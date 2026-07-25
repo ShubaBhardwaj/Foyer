@@ -3,7 +3,14 @@ import { View, StyleSheet } from "react-native";
 import { AppCard, H2, Subtitle, Caption } from "@/components/ui";
 import { useAppTheme, spacing } from "@/theme";
 import { MessageSquare, Vote, Calendar, Bell } from "lucide-react-native";
-import { CommunityStatistic } from "../data/communityDummyData";
+
+export interface CommunityStatistic {
+  id: string;
+  title: string;
+  value: string;
+  caption: string;
+  iconName: "MessageSquare" | "Vote" | "Calendar" | "Bell";
+}
 
 interface CommunityStatisticsProps {
   statistics: CommunityStatistic[];
@@ -35,7 +42,7 @@ export const CommunityStatistics = React.memo(function CommunityStatistics({
               >
                 {stat.title}
               </Subtitle>
-              <IconComponent size={18} color={theme.colors.primary} />
+              {IconComponent ? <IconComponent size={18} color={theme.colors.primary} /> : null}
             </View>
             <H2 style={{ color: theme.colors.onSurface, marginVertical: spacing.xs }}>
               {stat.value}
@@ -58,6 +65,8 @@ function getStatIcon(iconName: CommunityStatistic["iconName"]) {
       return Calendar;
     case "Bell":
       return Bell;
+    default:
+      return MessageSquare;
   }
 }
 

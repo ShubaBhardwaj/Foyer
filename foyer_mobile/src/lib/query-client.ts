@@ -7,10 +7,11 @@ export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       retry: 2,
-      staleTime: 60_000,
-      gcTime: 5 * 60_000,
+      staleTime: 60_000, // 1 minute
+      gcTime: 5 * 60_000, // 5 minutes
       refetchOnReconnect: true,
       refetchOnWindowFocus: false,
+      refetchOnMount: true,
       networkMode: "online",
     },
     mutations: {

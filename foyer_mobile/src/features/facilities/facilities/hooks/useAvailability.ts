@@ -1,27 +1,50 @@
-import { useState, useCallback } from "react";
-import { availabilityTimeSlots } from "../../shared/data/facilityDummyData";
+import { useState, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query-keys";
+import { amenityRepository } from "@/repositories/amenity.repository";
 import { TimeSlotItem } from "../../shared/types/facility.types";
 
-export function useAvailability(facilityId?: string) {
-  const [selectedDate, setSelectedDate] = useState("Tomorrow, 26 Jul 2026");
-  const [slots, setSlots] = useState<TimeSlotItem[]>(availabilityTimeSlots);
-  const [selectedSlotId, setSelectedSlotId] = useState<string | null>("s02");
-  const [isLoading, setIsLoading] = useState(false);
+export function useAvailability(facilityId: string, initialDate: string = "Today") {
+  const [selectedDate, setSelectedDate] = useState(initialDate);
+  const [selectedSlotId, setSelectedSlotId] = useState<string | null>(null);
 
-  const handleSelectSlot = useCallback((slotId: string) => {
-    setSelectedSlotId(slotId);
-  }, []);
+  const {
+    data: rawSlots,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: queryKeys.amenities.slots(facilityId, selectedDate),
+    queryFn: () => amenityRepository.fetchAvailableSlots(facilityId, selectedDate),
+    enabled: !!facilityId,
+  });
 
-  const selectedSlot = slots.find((s) => s.id === selectedSlotId);
+  const slots = useMemo<TimeSlotItem[]>(() => {
+    const list = rawSlots || [];
+    return list.map((s, idx) => ({
+      id: `slot_${idx}_${s.startTime}`,
+      time: `${s.startTime} - ${s.endTime}`,
+      period: parseInt(s.startTime) < 12 ? "Morning" : parseInt(s.startTime) < 17 ? "Afternoon" : "Evening",
+      isBooked: !s.isAvailable,
+      isDisabled: !s.isAvailable,
+    }));
+  }, [rawSlots]);
+
+  const selectedSlot = useMemo(() => {
+    return slots.find((s) => s.id === selectedSlotId) || null;
+  }, [slots, selectedSlotId]);
 
   return {
+    slots,
     selectedDate,
     setSelectedDate,
-    slots,
     selectedSlotId,
     selectedSlot,
+    handleSelectSlot: (slotId: string) => setSelectedSlotId(slotId),
     isLoading,
-    setIsLoading,
-    handleSelectSlot,
+    isError,
+    error,
+    refetch,
   };
 }

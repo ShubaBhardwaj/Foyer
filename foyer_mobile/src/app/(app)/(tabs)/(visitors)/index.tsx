@@ -19,7 +19,7 @@ import {
   VisitorList,
   VisitorRequest,
 } from "@/features/visitors";
-import { UserPlus, UserCheck, Shield, QrCode, Eye, CheckCircle2, XCircle } from "lucide-react-native";
+import { UserPlus, Shield, QrCode, Eye, CheckCircle2, XCircle } from "lucide-react-native";
 
 export default function VisitorsListScreen() {
   const theme = useAppTheme();
@@ -41,46 +41,32 @@ export default function VisitorsListScreen() {
   } = useVisitors();
 
   const handleVisitorPress = (visitorId: string) => {
-    // TODO: Replace with dynamic route navigation
     router.push(`/(app)/(tabs)/(visitors)/${visitorId}` as any);
-  };
-
-  const handleVisitorLongPress = (visitor: VisitorRequest) => {
-    setSelectedVisitor(visitor);
-    bottomSheetRef.current?.expand();
   };
 
   return (
     <AppScreen scrollable={true} statusBarStyle="auto">
-      {/* ─── Header ──────────────────────────────────────────────────────── */}
       <VisitorHeader
         title="Visitors"
         rightActionIcon={Shield}
         onRightActionPress={() => {
-          // Navigate to Pre-Approved Guests
           router.push("/(app)/(tabs)/(visitors)/pre-approved" as any);
         }}
       />
 
-      {/* ─── Search Bar ─────────────────────────────────────────────────── */}
       <VisitorSearch value={searchQuery} onChangeText={setSearchQuery} />
 
-      {/* ─── Filter Chips ────────────────────────────────────────────────── */}
       <VisitorFilters
-        filters={filters}
-        selectedFilter={selectedFilter}
-        onSelectFilter={setSelectedFilter}
+        filters={filters as any}
+        selectedFilter={selectedFilter as any}
+        onSelectFilter={(f) => setSelectedFilter(f)}
       />
 
-      {/* ─── Today's Overview Statistics ───────────────────────────────── */}
       <VisitorStatistics
         statistics={statistics}
-        onStatPress={(statId) => {
-          // TODO: Filter list by stat ID
-        }}
+        onStatPress={(_statId) => {}}
       />
 
-      {/* ─── Visitor List / Empty State / Loading ──────────────────────── */}
       <VisitorList
         visitors={visitors}
         onVisitorPress={handleVisitorPress}
@@ -91,7 +77,6 @@ export default function VisitorsListScreen() {
         onAddVisitor={() => router.push("/(app)/(tabs)/(visitors)/add" as any)}
       />
 
-      {/* ─── Bottom Floating Action Buttons ─────────────────────────────── */}
       <View style={styles.fabRow}>
         <AppButton
           label="Pre-Approved"
@@ -109,7 +94,6 @@ export default function VisitorsListScreen() {
         />
       </View>
 
-      {/* ─── Contextual Action Bottom Sheet ─────────────────────────────── */}
       <AppBottomSheet
         ref={bottomSheetRef}
         title={selectedVisitor ? selectedVisitor.name : "Visitor Actions"}

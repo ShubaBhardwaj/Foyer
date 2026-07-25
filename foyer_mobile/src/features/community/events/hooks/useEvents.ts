@@ -1,44 +1,16 @@
-import { useState, useMemo, useCallback } from "react";
-import { communityEvents } from "../../shared/data/communityDummyData";
+import { useState } from "react";
 import { CommunityEvent } from "../types/event.types";
 
 export function useEvents() {
-  const [events, setEvents] = useState<CommunityEvent[]>(communityEvents);
+  const [events] = useState<CommunityEvent[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-
-  const filteredEvents = useMemo(() => {
-    return events.filter(
-      (event) =>
-        searchQuery.trim() === "" ||
-        event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        event.venue.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        event.organizer.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }, [events, searchQuery]);
-
-  const handleToggleRsvp = useCallback((eventId: string) => {
-    // TODO: Call API endpoint POST /api/v1/community/events/:id/rsvp
-    setEvents((prev) =>
-      prev.map((e) =>
-        e.id === eventId
-          ? {
-              ...e,
-              isUserRsvped: !e.isUserRsvped,
-              rsvpCount: e.isUserRsvped ? e.rsvpCount - 1 : e.rsvpCount + 1,
-            }
-          : e
-      )
-    );
-  }, []);
+  const [isLoading] = useState(false);
 
   return {
-    events: filteredEvents,
-    rawEventsCount: events.length,
+    events,
     searchQuery,
     setSearchQuery,
     isLoading,
-    setIsLoading,
-    handleToggleRsvp,
+    handleToggleRsvp: (_eventId: string) => {},
   };
 }

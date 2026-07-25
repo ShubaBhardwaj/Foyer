@@ -1,6 +1,5 @@
 // Shared
 export * from "./shared/types/profile.types";
-export * from "./shared/data/profileDummyData";
 export * from "./api/profile.service";
 export { ProfileHeader } from "./shared/components/ProfileHeader";
 export { ProfileCard } from "./shared/components/ProfileCard";

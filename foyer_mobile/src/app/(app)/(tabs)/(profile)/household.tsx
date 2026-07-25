@@ -9,7 +9,6 @@ import {
   AppBottomSheet,
   AppBottomSheetRef,
   AppTextField,
-  Title,
   Subtitle,
   Body,
 } from "@/components/ui";
@@ -31,7 +30,6 @@ export default function HouseholdScreen() {
 
   const [selectedMember, setSelectedMember] = useState<HouseholdMember | null>(null);
 
-  // Invite Form State
   const [name, setName] = useState("");
   const [relationship, setRelationship] = useState("");
   const [phone, setPhone] = useState("");
@@ -50,30 +48,31 @@ export default function HouseholdScreen() {
 
   const handleInviteSubmit = async () => {
     setIsSubmitting(true);
-    // TODO: Replace dummy invite with POST /api/v1/household/invite API call
-    await inviteHouseholdMember({
-      name,
-      relationship,
-      phone,
-    });
-    setIsSubmitting(false);
-
-    inviteSheetRef.current?.close();
-    setName("");
-    setRelationship("");
-    setPhone("");
+    try {
+      await inviteHouseholdMember({
+        name,
+        relation: "OTHER",
+        phone,
+      });
+      inviteSheetRef.current?.close();
+      setName("");
+      setRelationship("");
+      setPhone("");
+    } catch (err) {
+      console.warn("Failed to invite household member:", err);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
     <AppScreen scrollable={true} statusBarStyle="auto">
-      {/* ─── Header ──────────────────────────────────────────────────────── */}
       <AppSectionHeader title="My Household Members" />
 
       <Body style={{ color: theme.colors.onSurfaceVariant, marginBottom: spacing.md }}>
-        Manage residents, family members, tenants, domestic helpers, and drivers associated with Tower A • Flat 504.
+        Manage residents, family members, tenants, domestic helpers, and drivers associated with your flat.
       </Body>
 
-      {/* ─── Household Members List ─────────────────────────────────────── */}
       {members.length === 0 ? (
         <ProfileEmptyState
           type="household"
@@ -92,7 +91,6 @@ export default function HouseholdScreen() {
         </AppCard>
       )}
 
-      {/* ─── Floating Action Button ─────────────────────────────────────── */}
       <View style={styles.fabRow}>
         <AppButton
           label="+ Invite Household Member"
@@ -104,7 +102,6 @@ export default function HouseholdScreen() {
         />
       </View>
 
-      {/* ─── Member Actions Bottom Sheet ───────────────────────────────── */}
       <AppBottomSheet
         ref={bottomSheetRef}
         title={selectedMember ? selectedMember.name : "Member Options"}
@@ -154,7 +151,6 @@ export default function HouseholdScreen() {
         )}
       </AppBottomSheet>
 
-      {/* ─── Invite Member Bottom Sheet ─────────────────────────────────── */}
       <AppBottomSheet ref={inviteSheetRef} title="Invite Household Member">
         <View style={styles.sheetForm}>
           <AppTextField

@@ -17,8 +17,6 @@ import {
   Car,
   Calendar,
   Clock,
-  Building2,
-  Home,
   CheckCircle2,
 } from "lucide-react-native";
 
@@ -30,42 +28,37 @@ export default function AddVisitorScreen() {
   const [phone, setPhone] = useState("");
   const [purpose, setPurpose] = useState("");
   const [vehicleNumber, setVehicleNumber] = useState("");
-  const [expectedDate, setExpectedDate] = useState("Today, 25 Jul 2026");
-  const [expectedTime, setExpectedTime] = useState("03:30 PM");
-  const [resident, setResident] = useState("Shubham Bhardwaj");
-  const [tower, setTower] = useState("Tower A");
-  const [flat, setFlat] = useState("Flat 504");
-  const [notes, setNotes] = useState("");
+  const [expectedDate, setExpectedDate] = useState("Today");
+  const [expectedTime, setExpectedTime] = useState("Now");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
-    // TODO: Replace dummy submission with POST /api/v1/visitors API call
-    await createVisitorRequest({
-      name,
-      phone,
-      purpose,
-      vehicleNumber,
-      expectedDate,
-      expectedTime,
-      notes,
-    });
-    setIsSubmitting(false);
-
-    // TODO: Navigate to Visitor List or Details Screen
-    router.back();
+    try {
+      await createVisitorRequest({
+        name,
+        phone,
+        purpose,
+        vehicleNumber,
+        expectedDate,
+        expectedTime,
+      });
+      router.back();
+    } catch (err) {
+      console.warn("Failed to create visitor pass:", err);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
     <AppScreen scrollable={true} statusBarStyle="auto">
-      {/* ─── Header ──────────────────────────────────────────────────────── */}
       <VisitorHeader
         title="Add Visitor"
         showBack={true}
         onBackPress={() => router.back()}
       />
 
-      {/* ─── Visitor Details Section ───────────────────────────────────── */}
       <AppSectionHeader title="Visitor Information" />
       <AppCard variant="outlined" style={styles.cardSection}>
         <AppTextField
@@ -99,7 +92,6 @@ export default function AddVisitorScreen() {
         />
       </AppCard>
 
-      {/* ─── Arrival Schedule Section ──────────────────────────────────── */}
       <AppSectionHeader title="Expected Arrival" />
       <AppCard variant="outlined" style={styles.cardSection}>
         <AppTextField
@@ -116,37 +108,6 @@ export default function AddVisitorScreen() {
         />
       </AppCard>
 
-      {/* ─── Host Resident Destination ─────────────────────────────────── */}
-      <AppSectionHeader title="Destination Resident" />
-      <AppCard variant="outlined" style={styles.cardSection}>
-        <AppTextField
-          label="Host Resident Name"
-          value={resident}
-          onChangeText={setResident}
-          leftIcon={User}
-        />
-        <AppTextField
-          label="Tower / Wing"
-          value={tower}
-          onChangeText={setTower}
-          leftIcon={Building2}
-        />
-        <AppTextField
-          label="Flat / Apartment Number"
-          value={flat}
-          onChangeText={setFlat}
-          leftIcon={Home}
-        />
-        <AppTextField
-          label="Additional Security Notes (Optional)"
-          value={notes}
-          onChangeText={setNotes}
-          placeholder="e.g. Carrying tools, delivery box"
-          multiline={true}
-        />
-      </AppCard>
-
-      {/* ─── Submit Action Button ──────────────────────────────────────── */}
       <View style={styles.submitContainer}>
         <AppButton
           label="Create Visitor"

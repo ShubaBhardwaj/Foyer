@@ -1,25 +1,92 @@
 import { create } from "zustand";
+import { UserMongoDto, SocietyDto, UserRole } from "@/types/api/auth";
 
-export interface UserProfile {
+export interface ClerkUserMetaData {
   id: string;
-  name: string;
-  email: string;
+  email?: string;
+  fullName?: string;
+  imageUrl?: string;
 }
 
 interface AuthState {
-  user: UserProfile | null;
+  clerkUser: ClerkUserMetaData | null;
+  user: UserMongoDto | null;
+  society: SocietyDto | null;
+  role: UserRole | null;
+  permissions: string[];
+  tower: string | null;
+  flat: string | null;
   isAuthenticated: boolean;
-  setUser: (user: UserProfile | null) => void;
+  isLoaded: boolean;
+  isInitialized: boolean;
+  
+  setUserSession: (user: UserMongoDto | null, society?: SocietyDto | null, clerkUser?: ClerkUserMetaData | null) => void;
+  setClerkUser: (clerkUser: ClerkUserMetaData | null) => void;
+  setInitialized: (initialized: boolean) => void;
   logout: () => void;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
-  user: {
-    id: "user_1",
-    name: "Architect User",
-    email: "architect@foyer.app",
+  clerkUser: null,
+  user: null,
+  society: null,
+  role: null,
+  permissions: [],
+  tower: null,
+  flat: null,
+  isAuthenticated: false,
+  isLoaded: false,
+  isInitialized: false,
+
+  setUserSession: (user, society = null, clerkUser = null) => {
+    if (!user) {
+      set({
+        user: null,
+        society: null,
+        role: null,
+        permissions: [],
+        tower: null,
+        flat: null,
+        isAuthenticated: false,
+        isLoaded: true,
+        isInitialized: true,
+      });
+      return;
+    }
+
+    const permissions = user.permissions || [];
+    const tower = typeof user.tower === "string" ? user.tower : null;
+    const flat = typeof user.flat === "string" ? user.flat : (user.flatNumber || null);
+
+    set((state) => ({
+      user,
+      society: society || (typeof user.society === "object" ? (user.society as SocietyDto) : state.society),
+      role: user.role,
+      permissions,
+      tower,
+      flat,
+      clerkUser: clerkUser || state.clerkUser,
+      isAuthenticated: true,
+      isLoaded: true,
+      isInitialized: true,
+    }));
   },
-  isAuthenticated: true,
-  setUser: (user) => set({ user, isAuthenticated: !!user }),
-  logout: () => set({ user: null, isAuthenticated: false }),
+
+  setClerkUser: (clerkUser) => set({ clerkUser }),
+
+  setInitialized: (initialized) => set({ isInitialized: initialized }),
+
+  logout: () =>
+    set({
+      clerkUser: null,
+      user: null,
+      society: null,
+      role: null,
+      permissions: [],
+      tower: null,
+      flat: null,
+      isAuthenticated: false,
+      isLoaded: true,
+      isInitialized: true,
+    }),
 }));

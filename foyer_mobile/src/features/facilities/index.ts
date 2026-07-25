@@ -1,6 +1,5 @@
 // Shared
 export * from "./shared/types/facility.types";
-export * from "./shared/data/facilityDummyData";
 export * from "./api/facility.service";
 export { FacilitiesHeader } from "./shared/components/FacilitiesHeader";
 export { FacilitySearch } from "./shared/components/FacilitySearch";

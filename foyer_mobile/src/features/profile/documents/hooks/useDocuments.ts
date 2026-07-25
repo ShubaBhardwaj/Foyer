@@ -1,15 +1,25 @@
-import { useState } from "react";
-import { documentsData } from "../../shared/data/profileDummyData";
+import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query-keys";
 import { DigitalDocument } from "../../shared/types/profile.types";
 
 export function useDocuments() {
-  const [documents] = useState<DigitalDocument[]>(documentsData);
-  const [isLoading, setIsLoading] = useState(false);
+  const {
+    data: documents = [],
+    isLoading,
+    isRefetching,
+    refetch,
+  } = useQuery<DigitalDocument[]>({
+    queryKey: queryKeys.profile.documents(),
+    queryFn: async () => {
+      return [];
+    },
+  });
 
   return {
     documents,
     rawCount: documents.length,
     isLoading,
-    setIsLoading,
+    isRefetching,
+    refetch,
   };
 }

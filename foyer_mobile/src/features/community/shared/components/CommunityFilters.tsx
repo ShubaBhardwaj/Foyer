@@ -2,7 +2,8 @@ import React from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { AppChip } from "@/components/ui";
 import { spacing } from "@/theme";
-import { CommunityCategoryFilter } from "../data/communityDummyData";
+
+export type CommunityCategoryFilter = string;
 
 interface CommunityFiltersProps {
   filters: CommunityCategoryFilter[];

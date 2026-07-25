@@ -27,6 +27,7 @@ export const AppButton = React.memo(function AppButton({
   rightIcon: RightIcon,
   onPress,
   fullWidth = false,
+  style,
   accessibilityLabel,
   accessibilityHint,
   testID,
@@ -82,6 +83,7 @@ export const AppButton = React.memo(function AppButton({
           opacity: isDisabled ? opacity.disabled : 1,
           alignSelf: fullWidth ? "stretch" : "flex-start",
         },
+        style,
       ]}
     >
       {loading ? (

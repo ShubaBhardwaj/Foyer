@@ -1,45 +1,78 @@
-import { useState, useMemo, useCallback } from "react";
-import { communityPolls } from "../../shared/data/communityDummyData";
+import { useState, useMemo } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query-keys";
+import { pollRepository } from "@/repositories/poll.repository";
+import { CreatePollRequestDto } from "@/types/api/poll";
 import { CommunityPoll } from "../types/poll.types";
 
 export function usePolls() {
-  const [polls, setPolls] = useState<CommunityPoll[]>(communityPolls);
   const [searchQuery, setSearchQuery] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const queryClient = useQueryClient();
+
+  const {
+    data: rawPolls,
+    isLoading,
+    isRefetching,
+    refetch,
+    isError,
+    error,
+  } = useQuery({
+    queryKey: queryKeys.polls.list(),
+    queryFn: () => pollRepository.fetchPollsList(),
+  });
+
+  const polls = useMemo<CommunityPoll[]>(() => {
+    const list = rawPolls || [];
+    return list.map((p) => {
+      const total = p.totalVotes || 0;
+      return {
+        id: p._id,
+        _id: p._id,
+        question: p.question,
+        description: p.description,
+        creatorName: p.createdBy?.name || "Society Admin",
+        creatorInitials: (p.createdBy?.name || "SA").slice(0, 2).toUpperCase(),
+        endsIn: p.endDate ? `Ends ${p.endDate}` : "Active",
+        endDate: p.endDate || "Ongoing",
+        category: "Poll" as const,
+        totalVotes: total,
+        userVotedOptionId: p.userVotedOptionId,
+        isClosed: p.status === "CLOSED",
+        options: (p.options || []).map((opt) => ({
+          id: opt._id,
+          _id: opt._id,
+          text: opt.text,
+          votesCount: opt.votesCount || 0,
+          percentage: total > 0 ? Math.round(((opt.votesCount || 0) / total) * 100) : 0,
+        })),
+      };
+    });
+  }, [rawPolls]);
 
   const filteredPolls = useMemo(() => {
+    if (!searchQuery.trim()) return polls;
+    const lower = searchQuery.toLowerCase();
     return polls.filter(
-      (poll) =>
-        searchQuery.trim() === "" ||
-        poll.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        poll.creatorName.toLowerCase().includes(searchQuery.toLowerCase())
+      (p) =>
+        p.question.toLowerCase().includes(lower) ||
+        p.creatorName.toLowerCase().includes(lower)
     );
   }, [polls, searchQuery]);
 
-  const handleVote = useCallback((pollId: string, optionId: string) => {
-    // TODO: Call API endpoint POST /api/v1/community/polls/:id/vote
-    setPolls((prev) =>
-      prev.map((poll) => {
-        if (poll.id !== pollId) return poll;
-        const newTotalVotes = poll.totalVotes + 1;
-        const updatedOptions = poll.options.map((opt) => {
-          const isTarget = opt.id === optionId;
-          const newCount = isTarget ? opt.votesCount + 1 : opt.votesCount;
-          return {
-            ...opt,
-            votesCount: newCount,
-            percentage: Math.round((newCount / newTotalVotes) * 100),
-          };
-        });
-        return {
-          ...poll,
-          totalVotes: newTotalVotes,
-          userVotedOptionId: optionId,
-          options: updatedOptions,
-        };
-      })
-    );
-  }, []);
+  const voteMutation = useMutation({
+    mutationFn: ({ pollId, optionId }: { pollId: string; optionId: string }) =>
+      pollRepository.castVote(pollId, optionId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.polls.all });
+    },
+  });
+
+  const createPollMutation = useMutation({
+    mutationFn: (dto: CreatePollRequestDto) => pollRepository.createPoll(dto),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.polls.all });
+    },
+  });
 
   return {
     polls: filteredPolls,
@@ -47,7 +80,13 @@ export function usePolls() {
     searchQuery,
     setSearchQuery,
     isLoading,
-    setIsLoading,
-    handleVote,
+    isRefetching,
+    isError,
+    error,
+    refetch,
+    handleVote: (pollId: string, optionId: string) => voteMutation.mutate({ pollId, optionId }),
+    isVoting: voteMutation.isPending,
+    createPoll: (dto: CreatePollRequestDto) => createPollMutation.mutateAsync(dto),
+    isCreating: createPollMutation.isPending,
   };
 }

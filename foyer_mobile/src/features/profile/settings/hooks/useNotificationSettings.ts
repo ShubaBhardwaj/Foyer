@@ -1,19 +1,25 @@
-import { useState, useCallback } from "react";
-import { initialNotificationPreferences } from "../../shared/data/profileDummyData";
+import { useState } from "react";
 import { NotificationPreferences } from "../../shared/types/profile.types";
 
 export function useNotificationSettings() {
-  const [preferences, setPreferences] = useState<NotificationPreferences>(
-    initialNotificationPreferences
-  );
+  const [preferences, setPreferences] = useState<NotificationPreferences>({
+    visitorAlerts: true,
+    bookingUpdates: true,
+    communityPosts: true,
+    polls: true,
+    events: true,
+    maintenance: true,
+    announcements: true,
+    marketing: false,
+  });
 
-  const handleToggle = useCallback((key: keyof NotificationPreferences) => {
-    // TODO: Call POST /api/v1/profile/notifications API endpoint
+  const handleToggle = (key: keyof NotificationPreferences) => {
     setPreferences((prev: NotificationPreferences) => ({ ...prev, [key]: !prev[key] }));
-  }, []);
+  };
 
   return {
     preferences,
+    setPreferences,
     handleToggle,
   };
 }
