@@ -7,8 +7,9 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import Toast from "react-native-toast-message";
 
+import { useColorScheme } from "react-native";
 import { queryClient } from "@/lib/query-client";
-import { AppLightTheme } from "@/theme/theme";
+import { AppLightTheme, AppDarkTheme } from "@/theme/theme";
 
 interface AppProviderProps {
   children: React.ReactNode;
@@ -26,10 +27,13 @@ interface AppProviderProps {
  * 7. Toast (Global React Native Toast Message renderer at top of tree)
  */
 export function AppProvider({ children }: AppProviderProps) {
+  const scheme = useColorScheme();
+  const theme = scheme === "dark" ? AppDarkTheme : AppLightTheme;
+
   return (
     <GestureHandlerRootView style={styles.root}>
       <SafeAreaProvider>
-        <PaperProvider theme={AppLightTheme}>
+        <PaperProvider theme={theme}>
           <QueryClientProvider client={queryClient}>
             <BottomSheetModalProvider>
               {children}

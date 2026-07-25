@@ -1,6 +1,7 @@
 import { NativeTabs } from "expo-router/unstable-native-tabs";
 import { useAppTheme } from "@/theme";
 
+
 export const unstable_settings = {
   initialRouteName: "(home)",
 };
