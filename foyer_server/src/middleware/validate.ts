@@ -1,10 +1,11 @@
 import { Request, Response, NextFunction } from "express";
 import { ZodSchema, ZodError } from "zod";
+import ApiError from "../utils/apiError";
 
 /**
  * Generic Zod validation middleware factory.
  * Validates `req.body` against the provided Zod schema.
- * Returns 400 with structured error details if validation fails.
+ * Forwards validation errors to the global error middleware.
  */
 export const validate = (schema: ZodSchema) => {
   return (req: Request, res: Response, next: NextFunction): void => {
@@ -18,19 +19,11 @@ export const validate = (schema: ZodSchema) => {
           message: e.message,
         }));
 
-        res.status(400).json({
-          success: false,
-          message: "Validation failed.",
-          data: errors,
-        });
+        next(ApiError.validation("Validation failed.", errors));
         return;
       }
 
-      res.status(400).json({
-        success: false,
-        message: "Invalid request body.",
-        data: null,
-      });
+      next(ApiError.badRequest("Invalid request body."));
     }
   };
 };

@@ -4,6 +4,7 @@ import UserModel, { Role, IUser } from "../models/User";
 import { fetchClerkUser } from "../utils/clerkUser";
 import { generateUniqueId } from "../utils/generateUniqueId";
 import { RegisterSocietyInput } from "../validators/society.validator";
+import ApiError from "../utils/apiError";
 
 interface RegisterSocietyResult {
   society: ISociety;
@@ -25,10 +26,7 @@ class SocietyService {
     // Ensure this Clerk user doesn't already own an account.
     const existingUser = await UserModel.findOne({ clerkId: clerkUserId });
     if (existingUser) {
-      throw {
-        statusCode: 409,
-        message: "You already have an account. Cannot register another society.",
-      };
+      throw ApiError.conflict("You already have an account. Cannot register another society.");
     }
 
     const clerkProfile = await fetchClerkUser(clerkUserId);

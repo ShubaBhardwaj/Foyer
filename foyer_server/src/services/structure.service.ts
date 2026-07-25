@@ -7,6 +7,7 @@ import {
   ExpandStructureInput,
   UpdateStructureInput,
 } from "../validators/structure.validator";
+import ApiError from "../utils/apiError";
 
 export interface StructureResult {
   towers: ITower[];
@@ -31,11 +32,9 @@ class StructureService {
     // Check if structure already exists
     const existingCount = await TowerModel.countDocuments({ society: societyId });
     if (existingCount > 0) {
-      throw {
-        statusCode: 409,
-        message:
-          "Society structure has already been initialized. Use expand or update endpoints instead.",
-      };
+      throw ApiError.conflict(
+        "Society structure has already been initialized. Use expand or update endpoints instead."
+      );
     }
 
     const session = await mongoose.startSession();
@@ -163,10 +162,7 @@ class StructureService {
 
       for (const update of updates) {
         if (!Types.ObjectId.isValid(update.towerId)) {
-          throw {
-            statusCode: 400,
-            message: `Invalid Tower ID format: ${update.towerId}`,
-          };
+          throw ApiError.badRequest(`Invalid Tower ID format: ${update.towerId}`);
         }
 
         const towerObjectId = new Types.ObjectId(update.towerId);
@@ -177,10 +173,7 @@ class StructureService {
         }).session(session);
 
         if (!tower) {
-          throw {
-            statusCode: 404,
-            message: `Tower not found in this society: ${update.towerId}`,
-          };
+          throw ApiError.notFound(`Tower not found in this society: ${update.towerId}`);
         }
 
         // Extensible Structure Lock Check
@@ -268,10 +261,7 @@ class StructureService {
   ): Promise<void> {
     const tower = await TowerModel.findOne({ _id: towerId, society: societyId });
     if (!tower) {
-      throw {
-        statusCode: 404,
-        message: "Tower not found in this society.",
-      };
+      throw ApiError.notFound("Tower not found in this society.");
     }
 
     const session = await mongoose.startSession();
@@ -314,10 +304,9 @@ class StructureService {
     const occupiedFlat = await query.exec();
 
     if (occupiedFlat) {
-      throw {
-        statusCode: 409,
-        message: `Society structure cannot be modified because the Tower is already in use (Flat ${occupiedFlat.flatNumber} is occupied).`,
-      };
+      throw ApiError.conflict(
+        `Society structure cannot be modified because the Tower is already in use (Flat ${occupiedFlat.flatNumber} is occupied).`
+      );
     }
   }
 

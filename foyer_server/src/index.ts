@@ -1,14 +1,17 @@
 import cors from "cors";
-import "dotenv/config";
 import express from "express";
+import helmet from "helmet";
+import { env } from "./config/env";
 import DBConnect from "./config/db";
 import authRouter from "./routes/auth.routes";
 import societyRouter from "./routes/society.routes";
 import userRouter from "./routes/user.routes";
+import errorMiddleware from "./middleware/errorMiddleware";
 
 const app = express();
 
 // Global middleware
+app.use(helmet());
 app.use(express.json());
 app.use(cors({ origin: "*" }));
 
@@ -25,8 +28,11 @@ app.get("/", (_req, res) => {
   });
 });
 
+// Global Error Middleware (must be registered after all routes)
+app.use(errorMiddleware);
+
 // Start the Express server
-const PORT = process.env.PORT || 8000;
+const PORT = env.PORT;
 
 const start = async () => {
   await DBConnect();

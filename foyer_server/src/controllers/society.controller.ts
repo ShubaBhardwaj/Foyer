@@ -1,6 +1,8 @@
 import { Request, Response } from "express";
 import societyService from "../services/society.service";
-import { sendSuccess, sendError } from "../utils/apiResponse";
+import ApiResponse from "../utils/apiResponse";
+import ApiError from "../utils/apiError";
+import asyncHandler from "../utils/asyncHandler";
 import { RegisterSocietyInput } from "../validators/society.validator";
 
 /**
@@ -14,21 +16,14 @@ class SocietyController {
    * Registers a new society and creates the owner user.
    * Only callable by authenticated Clerk users who don't already have an account.
    */
-  async register(req: Request, res: Response): Promise<void> {
-    try {
-      const clerkUserId = req.auth!.clerkUserId;
-      const data = req.body as RegisterSocietyInput;
+  register = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    const clerkUserId = req.auth!.clerkUserId;
+    const data = req.body as RegisterSocietyInput;
 
-      const result = await societyService.registerSociety(clerkUserId, data);
+    const result = await societyService.registerSociety(clerkUserId, data);
 
-      sendSuccess(res, result, "Society registered successfully.", 201);
-    } catch (error: any) {
-      const statusCode = error.statusCode || 500;
-      const message = error.message || "Failed to register society.";
-      console.error("[SocietyController.register]", message);
-      sendError(res, message, statusCode);
-    }
-  }
+    ApiResponse.created(res, "Society registered successfully.", result);
+  });
 
   /**
    * GET /society/me
@@ -36,23 +31,15 @@ class SocietyController {
    * Returns the authenticated user's society.
    * Requires a linked account (req.user must exist).
    */
-  async getMySociety(req: Request, res: Response): Promise<void> {
-    try {
-      const society = await societyService.getMySociety(req.user!.society);
+  getMySociety = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    const society = await societyService.getMySociety(req.user!.society);
 
-      if (!society) {
-        sendError(res, "Society not found.", 404);
-        return;
-      }
-
-      sendSuccess(res, { society }, "Society fetched.");
-    } catch (error: any) {
-      const statusCode = error.statusCode || 500;
-      const message = error.message || "Failed to fetch society.";
-      console.error("[SocietyController.getMySociety]", message);
-      sendError(res, message, statusCode);
+    if (!society) {
+      throw ApiError.notFound("Society not found.");
     }
-  }
+
+    ApiResponse.ok(res, "Society fetched.", { society });
+  });
 }
 
 export default new SocietyController();

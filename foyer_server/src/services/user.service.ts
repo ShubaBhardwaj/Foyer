@@ -4,6 +4,7 @@ import SocietyModel from "../models/Society";
 import TowerModel from "../models/Tower";
 import FlatModel from "../models/Flat";
 import { generateUniqueId } from "../utils/generateUniqueId";
+import ApiError from "../utils/apiError";
 
 /**
  * Defines which roles can create which other roles.
@@ -44,10 +45,7 @@ class UserService {
   ): Promise<IUser> {
     // Security Rule: Reject any attempt to assign the Owner role
     if (targetRole === Role.OWNER) {
-      throw {
-        statusCode: 403,
-        message: "The Owner role is reserved and cannot be assigned.",
-      };
+      throw ApiError.forbidden("The Owner role is reserved and cannot be assigned.");
     }
 
     // Step 1: Verify permission based on hierarchy (creator must have at least one allowed role)
@@ -57,12 +55,11 @@ class UserService {
     });
 
     if (!hasPermission) {
-      throw {
-        statusCode: 403,
-        message: `Your current roles [${creator.roles.join(
+      throw ApiError.forbidden(
+        `Your current roles [${creator.roles.join(
           ", "
-        )}] do not have permission to create role "${targetRole}".`,
-      };
+        )}] do not have permission to create role "${targetRole}".`
+      );
     }
 
     // Step 2: Verify email uniqueness in MongoDB
@@ -70,19 +67,13 @@ class UserService {
       email: data.email.toLowerCase(),
     });
     if (existingUser) {
-      throw {
-        statusCode: 409,
-        message: `A user with email "${data.email}" already exists.`,
-      };
+      throw ApiError.conflict(`A user with email "${data.email}" already exists.`);
     }
 
     // Step 3: Ensure society exists
     const society = await SocietyModel.findById(creator.society);
     if (!society) {
-      throw {
-        statusCode: 500,
-        message: "Creator's society not found.",
-      };
+      throw ApiError.internal("Creator's society not found.");
     }
 
     // Step 4: Generate 6-character alphanumeric Unique ID
@@ -107,20 +98,16 @@ class UserService {
 
       if (data.tower || data.flat) {
         if (!data.tower || !data.flat) {
-          throw {
-            statusCode: 400,
-            message: "Both Tower ID and Flat ID are required for residence allocation.",
-          };
+          throw ApiError.badRequest(
+            "Both Tower ID and Flat ID are required for residence allocation."
+          );
         }
 
         if (
           !Types.ObjectId.isValid(data.tower) ||
           !Types.ObjectId.isValid(data.flat)
         ) {
-          throw {
-            statusCode: 400,
-            message: "Invalid Tower ID or Flat ID format.",
-          };
+          throw ApiError.badRequest("Invalid Tower ID or Flat ID format.");
         }
 
         towerObjectId = new Types.ObjectId(data.tower);
@@ -133,10 +120,7 @@ class UserService {
         }).session(session);
 
         if (!towerDoc) {
-          throw {
-            statusCode: 404,
-            message: "Tower not found in this society.",
-          };
+          throw ApiError.notFound("Tower not found in this society.");
         }
 
         // Validate flat belongs to tower & society
@@ -147,18 +131,12 @@ class UserService {
         }).session(session);
 
         if (!flatDoc) {
-          throw {
-            statusCode: 404,
-            message: "Flat not found in the specified Tower.",
-          };
+          throw ApiError.notFound("Flat not found in the specified Tower.");
         }
 
         // Validate flat is not already occupied
         if (flatDoc.occupied) {
-          throw {
-            statusCode: 409,
-            message: `Flat ${flatDoc.flatNumber} is already occupied.`,
-          };
+          throw ApiError.conflict(`Flat ${flatDoc.flatNumber} is already occupied.`);
         }
 
         // Reserve flatObjectId for user creation below

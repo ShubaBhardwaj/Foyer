@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { Role } from "../models/User";
+import ApiError from "../utils/apiError";
 
 /**
  * Role-based authorization middleware factory.
@@ -13,11 +14,7 @@ import { Role } from "../models/User";
 export const requireRole = (...allowedRoles: Role[]) => {
   return (req: Request, res: Response, next: NextFunction): void => {
     if (!req.user || !req.user.roles || req.user.roles.length === 0) {
-      res.status(401).json({
-        success: false,
-        message: "Unauthorized: User account not linked or has no roles.",
-        data: null,
-      });
+      next(ApiError.unauthorized("Unauthorized: User account not linked or has no roles."));
       return;
     }
 
@@ -26,11 +23,7 @@ export const requireRole = (...allowedRoles: Role[]) => {
     );
 
     if (!hasPermission) {
-      res.status(403).json({
-        success: false,
-        message: `Forbidden: Requires role ${allowedRoles.join(" or ")}.`,
-        data: null,
-      });
+      next(ApiError.forbidden(`Forbidden: Requires role ${allowedRoles.join(" or ")}.`));
       return;
     }
 
@@ -48,11 +41,7 @@ export const requireLinkedAccount = (
   next: NextFunction
 ): void => {
   if (!req.user) {
-    res.status(401).json({
-      success: false,
-      message: "Unauthorized: Account not linked. Complete login first.",
-      data: null,
-    });
+    next(ApiError.unauthorized("Unauthorized: Account not linked. Complete login first."));
     return;
   }
   next();

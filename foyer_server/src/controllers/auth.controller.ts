@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import authService from "../services/auth.service";
-import { sendSuccess, sendError } from "../utils/apiResponse";
+import ApiResponse from "../utils/apiResponse";
+import asyncHandler from "../utils/asyncHandler";
 import { CompleteLoginInput } from "../validators/auth.validator";
 
 /**
@@ -13,41 +14,27 @@ class AuthController {
    *
    * Handles both first-time login (with uniqueId) and future login (clerkId only).
    */
-  async completeLogin(req: Request, res: Response): Promise<void> {
-    try {
-      const clerkUserId = req.auth!.clerkUserId;
-      const { uniqueId } = req.body as CompleteLoginInput;
+  completeLogin = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    const clerkUserId = req.auth!.clerkUserId;
+    const { uniqueId } = req.body as CompleteLoginInput;
 
-      const result = await authService.completeLogin(clerkUserId, uniqueId);
+    const result = await authService.completeLogin(clerkUserId, uniqueId);
 
-      sendSuccess(res, result, "Login successful.");
-    } catch (error: any) {
-      const statusCode = error.statusCode || 500;
-      const message = error.message || "Login failed.";
-      console.error("[AuthController.completeLogin]", message);
-      sendError(res, message, statusCode);
-    }
-  }
+    ApiResponse.ok(res, "Login successful.", result);
+  });
 
   /**
    * GET /auth/me
    *
    * Returns the current authenticated user's profile and society.
    */
-  async getMe(req: Request, res: Response): Promise<void> {
-    try {
-      const clerkUserId = req.auth!.clerkUserId;
+  getMe = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    const clerkUserId = req.auth!.clerkUserId;
 
-      const result = await authService.getMe(clerkUserId);
+    const result = await authService.getMe(clerkUserId);
 
-      sendSuccess(res, result, "User profile fetched.");
-    } catch (error: any) {
-      const statusCode = error.statusCode || 500;
-      const message = error.message || "Failed to fetch user profile.";
-      console.error("[AuthController.getMe]", message);
-      sendError(res, message, statusCode);
-    }
-  }
+    ApiResponse.ok(res, "User profile fetched.", result);
+  });
 }
 
 export default new AuthController();

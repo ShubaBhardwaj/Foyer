@@ -2,6 +2,7 @@ import UserModel, { IUser } from "../models/User";
 import SocietyModel, { ISociety } from "../models/Society";
 import { fetchClerkUser } from "../utils/clerkUser";
 import { clerkClient } from "../config/clerk";
+import ApiError from "../utils/apiError";
 
 interface LoginResult {
   user: IUser;
@@ -37,11 +38,9 @@ class AuthService {
         console.error("[AuthService] Error deleting clerk user:", err);
       });
 
-      throw {
-        statusCode: 404,
-        message:
-          "No account linked to this Google account. Please provide your Unique ID for first-time login.",
-      };
+      throw ApiError.notFound(
+        "No account linked to this Google account. Please provide your Unique ID for first-time login."
+      );
     }
 
     // Step 3: Find user by uniqueId.
@@ -53,10 +52,7 @@ class AuthService {
         console.error("[AuthService] Error deleting clerk user:", err);
       });
 
-      throw {
-        statusCode: 404,
-        message: `No user found with Unique ID: ${uniqueId}`,
-      };
+      throw ApiError.notFound(`No user found with Unique ID: ${uniqueId}`);
     }
 
     // Step 4: Check if already linked to a different Clerk account.
@@ -65,10 +61,7 @@ class AuthService {
         console.error("[AuthService] Error deleting clerk user:", err);
       });
 
-      throw {
-        statusCode: 409,
-        message: "This account is already linked to another Google account.",
-      };
+      throw ApiError.conflict("This account is already linked to another Google account.");
     }
 
     // Step 5: Fetch Clerk user profile to verify email match.
@@ -80,11 +73,9 @@ class AuthService {
         console.error("[AuthService] Error deleting clerk user:", err);
       });
 
-      throw {
-        statusCode: 403,
-        message:
-          "Your email is not same as you provided at the time of registration.",
-      };
+      throw ApiError.forbidden(
+        "Your email is not same as you provided at the time of registration."
+      );
     }
 
     // Step 6: Check if user is blocked.
@@ -93,10 +84,7 @@ class AuthService {
         console.error("[AuthService] Error deleting clerk user:", err);
       });
 
-      throw {
-        statusCode: 403,
-        message: "Your account has been blocked. Contact your society admin.",
-      };
+      throw ApiError.forbidden("Your account has been blocked. Contact your society admin.");
     }
 
     // Step 7: Link the Clerk account permanently.
@@ -116,10 +104,7 @@ class AuthService {
     const user = await UserModel.findOne({ clerkId: clerkUserId });
 
     if (!user) {
-      throw {
-        statusCode: 404,
-        message: "No account linked to this Google account.",
-      };
+      throw ApiError.notFound("No account linked to this Google account.");
     }
 
     const society = await SocietyModel.findById(user.society);

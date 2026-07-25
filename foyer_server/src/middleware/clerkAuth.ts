@@ -1,6 +1,8 @@
 import { Request, Response, NextFunction } from "express";
 import { clerkClient } from "../config/clerk";
 import UserModel from "../models/User";
+import { env } from "../config/env";
+import ApiError from "../utils/apiError";
 
 /**
  * Clerk JWT Authentication Middleware.
@@ -21,11 +23,7 @@ const clerkAuth = async (
     const authHeader = req.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      res.status(401).json({
-        success: false,
-        message: "Unauthorized: Missing or malformed Authorization header.",
-        data: null,
-      });
+      next(ApiError.unauthorized("Unauthorized: Missing or malformed Authorization header."));
       return;
     }
 
@@ -51,7 +49,7 @@ const clerkAuth = async (
         url: absoluteUrl,
       } as any,
       {
-        jwtKey: process.env.CLERK_JWT_KEY,
+        jwtKey: env.CLERK_JWT_KEY,
       }
     );
 
@@ -62,11 +60,7 @@ const clerkAuth = async (
         "Details:",
         requestState.reason
       );
-      res.status(401).json({
-        success: false,
-        message: `Unauthorized: Invalid or expired token.`,
-        data: null,
-      });
+      next(ApiError.unauthorized("Unauthorized: Invalid or expired token."));
       return;
     }
 
@@ -85,11 +79,7 @@ const clerkAuth = async (
   } catch (error) {
     const message = (error as Error).message ?? "Authentication failed.";
     console.error("[clerkAuth] Error:", message);
-    res.status(401).json({
-      success: false,
-      message: `Unauthorized: ${message}`,
-      data: null,
-    });
+    next(ApiError.unauthorized(`Unauthorized: ${message}`));
   }
 };
 

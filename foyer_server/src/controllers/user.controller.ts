@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import userService from "../services/user.service";
-import { sendSuccess, sendError } from "../utils/apiResponse";
+import ApiResponse from "../utils/apiResponse";
+import asyncHandler from "../utils/asyncHandler";
 import { Role } from "../models/User";
 
 /**
@@ -14,9 +15,9 @@ class UserController {
    * Creates a super admin for the creator's society.
    * Allowed: owner only.
    */
-  async createSuperAdmin(req: Request, res: Response): Promise<void> {
+  createSuperAdmin = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     await this.createUserWithRole(req, res, Role.SUPER_ADMIN);
-  }
+  });
 
   /**
    * POST /user/admin
@@ -24,9 +25,9 @@ class UserController {
    * Creates a society admin.
    * Allowed: super_admin only.
    */
-  async createAdmin(req: Request, res: Response): Promise<void> {
+  createAdmin = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     await this.createUserWithRole(req, res, Role.ADMIN);
-  }
+  });
 
   /**
    * POST /user/resident
@@ -34,9 +35,9 @@ class UserController {
    * Creates a resident.
    * Allowed: super_admin, admin.
    */
-  async createResident(req: Request, res: Response): Promise<void> {
+  createResident = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     await this.createUserWithRole(req, res, Role.RESIDENT);
-  }
+  });
 
   /**
    * POST /user/guard
@@ -44,27 +45,20 @@ class UserController {
    * Creates a guard.
    * Allowed: super_admin, admin.
    */
-  async createGuard(req: Request, res: Response): Promise<void> {
+  createGuard = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     await this.createUserWithRole(req, res, Role.GUARD);
-  }
+  });
 
   /**
    * GET /user
    *
    * Gets all users in the creator's society.
    */
-  async getSocietyUsers(req: Request, res: Response): Promise<void> {
-    try {
-      const societyId = req.user!.society;
-      const users = await userService.getSocietyUsers(societyId);
-      sendSuccess(res, { users }, "Society users fetched successfully.");
-    } catch (error: any) {
-      const statusCode = error.statusCode || 500;
-      const message = error.message || "Failed to fetch society users.";
-      console.error("[UserController.getSocietyUsers]", message);
-      sendError(res, message, statusCode);
-    }
-  }
+  getSocietyUsers = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    const societyId = req.user!.society;
+    const users = await userService.getSocietyUsers(societyId);
+    ApiResponse.ok(res, "Society users fetched successfully.", { users });
+  });
 
   /**
    * Shared handler for creating users with a specific role.
@@ -74,23 +68,15 @@ class UserController {
     res: Response,
     role: Role
   ): Promise<void> {
-    try {
-      const creator = req.user!;
+    const creator = req.user!;
 
-      const newUser = await userService.createUser(creator, role, req.body);
+    const newUser = await userService.createUser(creator, role, req.body);
 
-      sendSuccess(
-        res,
-        { user: newUser },
-        `${role.replace("_", " ")} created successfully.`,
-        201
-      );
-    } catch (error: any) {
-      const statusCode = error.statusCode || 500;
-      const message = error.message || `Failed to create ${role}.`;
-      console.error(`[UserController.create${role}]`, message);
-      sendError(res, message, statusCode);
-    }
+    ApiResponse.created(
+      res,
+      `${role.replace("_", " ")} created successfully.`,
+      { user: newUser }
+    );
   }
 }
 
