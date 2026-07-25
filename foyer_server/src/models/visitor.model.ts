@@ -10,6 +10,7 @@ export interface IVisitor extends Document {
 
   visitorType: VisitorType;
   purpose?: string;
+  notes?: string;
   vehicleNumber?: string;
   expectedArrival: Date;
   expectedDeparture?: Date;
@@ -33,6 +34,9 @@ export interface IVisitor extends Document {
   checkedInBy?: Types.ObjectId;
   checkedOutAt?: Date;
   checkedOutBy?: Types.ObjectId;
+
+  isDeleted?: boolean;
+  deletedAt?: Date;
 
   createdAt: Date;
   updatedAt: Date;
@@ -69,6 +73,11 @@ const visitorSchema = new Schema<IVisitor>(
     },
 
     purpose: {
+      type: String,
+      trim: true,
+    },
+
+    notes: {
       type: String,
       trim: true,
     },
@@ -156,6 +165,17 @@ const visitorSchema = new Schema<IVisitor>(
     checkedOutBy: {
       type: Schema.Types.ObjectId,
       ref: "User",
+    },
+
+    isDeleted: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+
+    deletedAt: {
+      type: Date,
+      default: null,
     },
   },
   {
