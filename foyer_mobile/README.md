@@ -1,56 +1,84 @@
-# Welcome to your Expo app 👋
+# 📱 Foyer Mobile Client (`foyer_mobile`)
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+> **The mobile operational client for Foyer — engineered for residents, gate security guards, and society administrators.**
 
-## Get started
+---
 
-1. Install dependencies
+## 🎨 Mobile Design System & UI Engine
 
-   ```bash
-   npm install
-   ```
+`foyer_mobile` features a custom-built, enterprise-grade atomic design system built on top of Expo Router, React Native Reanimated, and custom HSL theme tokens.
 
-2. Start the app
+### 🌟 Key Visual Highlights
+1. **Custom Native Splash & Branding**:
+   - Replaced default Expo blue screen with a modern Dark Slate (`#0F172A`) backdrop, branded Foyer splash logo, and dark status bar configuration.
+2. **Plus Jakarta Sans Typography**:
+   - Native integration of **Plus Jakarta Sans** (`Regular`, `Medium`, `SemiBold`, `Bold`) with font scaling and preset levels (`h1` through `caption`).
+3. **19+ Custom UI Components**:
+   - `AppScreen` (Safe Area wrapper)
+   - `AppButton` & `AppIconButton`
+   - `AppTextField` & `AppSearchBar`
+   - `AppCard` (Elevated, Outlined, Flat)
+   - `AppAvatar` & `AppAvatarPicker`
+   - `AppBadge` & `AppStatusPill`
+   - `AppChip` & `AppSegmentedControl`
+   - `AppListRow` & `AppEmptyState`
+   - `AppBottomSheet` & `AppDialog`
+   - `AppOtpInput` & `AppLoader`
+   - `AppDivider` & `Typography`
+4. **Theme & Dark Mode Support**:
+   - Theme provider (`app-provider.tsx`) with dark mode support and dynamic HSL color tokens (`theme.ts`).
+5. **Interactive Developer Showcase**:
+   - Explore and test all UI components live in the app via the `/dev/design-system` developer route.
 
-   ```bash
-   npx expo start
-   ```
+---
 
-In the output, you'll find options to open the app in a
+## 📁 Directory Structure
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
+```
+foyer_mobile/
+├── assets/
+│   ├── fonts/                   # PlusJakartaSans font files
+│   └── images/                  # Branded app icons & dark splash screen assets
+├── src/
+│   ├── app/                     # Expo Router file-based navigation
+│   │   ├── (app)/               # Main application tabs and stack routes
+│   │   ├── (auth)/              # Authentication screens
+│   │   └── dev/                 # /dev/design-system showcase route
+│   ├── components/
+│   │   └── ui/                  # 19+ Atomic UI Primitives
+│   ├── providers/               # ThemeProvider, ClerkProvider, AppProvider
+│   └── theme/                   # Theme tokens, colors, typography scales
+├── app.json                     # Expo config & splash configuration
+└── package.json
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+---
 
-### Other setup steps
+## 🚀 Getting Started
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+### Prerequisites
+- **Node.js**: `>= 20.0.0`
+- **Bun**: `>= 1.1.0` (Recommended) or `pnpm`
+- **Expo Go App** (iOS / Android) or Simulator
 
-## Learn more
+### Installation & Launch
 
-To learn more about developing your project with Expo, look at the following resources:
+```bash
+# Install dependencies
+bun install
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+# Start the Expo development server
+npx expo start
+```
 
-## Join the community
+Press `i` for iOS Simulator, `a` for Android Emulator, or scan the QR code using Expo Go.
 
-Join our community of developers creating universal apps.
+---
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+## 🎨 Accessing the Design System Showcase
+
+While running the app in development mode, navigate to:
+```
+/dev/design-system
+```
+This screen presents interactive previews, state toggles, dialog triggers, and layout demonstrations for all design system primitives.

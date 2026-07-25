@@ -43,6 +43,17 @@ Foyer solves these challenges by providing:
 - **Multi-Role Support**: Schema support for multiple user roles (`User.roles: [String]`). Users assigned to a residence automatically receive the `resident` role alongside their administrative roles (e.g., `["admin", "resident"]`).
 - **Owner Role Safeguards**: Server-side checks that strictly forbid creating or assigning the `owner` role through standard user creation endpoints.
 
+### 🎨 Mobile Design System & Modern UI Engine
+- **Custom Branding & Native Splash**: High-performance splash configuration with sleek Dark Slate (`#0F172A`) backdrop, branded Foyer splash icon, dark status bar, and custom app icons replacing generic Expo defaults.
+- **Plus Jakarta Sans Typography System**: Native font engine powering the `<Typography />` component across 4 weight variants (`Regular`, `Medium`, `SemiBold`, `Bold`) and 8 size presets (`h1`, `h2`, `h3`, `body1`, `body2`, `caption`, `label`, `button`).
+- **19+ Custom UI Components**: Enterprise-ready mobile component library (`foyer_mobile/src/components/ui/`):
+  - **Layout & Structure**: `AppScreen`, `AppCard`, `AppDivider`, `AppSectionHeader`.
+  - **Inputs & Controls**: `AppButton`, `AppIconButton`, `AppTextField`, `AppSearchBar`, `AppOtpInput`, `AppChip`, `AppSegmentedControl`.
+  - **Overlays & Modals**: `AppBottomSheet`, `AppDialog`, `AppLoader`.
+  - **Data Display & Status**: `AppAvatar`, `AppAvatarPicker`, `AppBadge`, `AppStatusPill`, `AppListRow`, `AppEmptyState`.
+- **Dynamic Light & Dark Theme System**: Centralized design tokens (`theme.ts`) featuring curated HSL color palettes (Slate, Indigo, Emerald, Amber, Rose) with system scheme detection and manual toggle support.
+- **Live Component Showcase**: Built-in developer showcase screen at `/dev/design-system` for real-time component auditing and state verification.
+
 ### 🛡️ Security & Integrity
 - **ACID Mongoose Transactions**: Multi-document operations (structure setup, expansion, and resident flat assignment) run inside MongoDB sessions with atomic rollback support.
 - **Compound Unique Indexes**: Database-level protection preventing duplicate tower names, duplicate flat numbers per tower, or duplicate unique IDs per society.
@@ -166,6 +177,46 @@ foyer_web/src/
 ├── hooks/                      # Custom hooks (e.g. useAuthUser)
 ├── providers/                  # QueryClient, Clerk, Theme, and Toast providers
 └── services/api/               # Axios client configuration & endpoint functions
+```
+
+---
+
+## 📱 Mobile Architecture & Design System
+
+The mobile application (`foyer_mobile`) is engineered with Expo Router and features a decoupled, atomic design system:
+
+```
+foyer_mobile/
+├── assets/
+│   ├── fonts/                   # PlusJakartaSans (Regular, Medium, SemiBold, Bold)
+│   └── images/                  # Custom dark splash screens & icon assets
+├── src/
+│   ├── app/                     # Expo Router file-based screens
+│   │   ├── (app)/               # Protected app tabs & screens
+│   │   ├── (auth)/              # Authentication screens
+│   │   └── dev/                 # Live Component Showcase (/dev/design-system)
+│   ├── components/
+│   │   └── ui/                  # Design System Primitives
+│   │       ├── Avatar/          # AppAvatar & AppAvatarPicker
+│   │       ├── Badge/           # AppBadge & AppStatusPill
+│   │       ├── BottomSheet/     # AppBottomSheet modal
+│   │       ├── Button/          # AppButton & AppIconButton
+│   │       ├── Card/            # AppCard with variants
+│   │       ├── Chip/            # AppChip tags
+│   │       ├── Dialog/          # AppDialog popups
+│   │       ├── Divider/         # AppDivider
+│   │       ├── EmptyState/      # AppEmptyState illustrations
+│   │       ├── ListRow/         # AppListRow items
+│   │       ├── Loader/          # AppLoader indicator
+│   │       ├── OtpInput/        # AppOtpInput 4/6-digit code box
+│   │       ├── Screen/          # AppScreen Safe Area wrapper
+│   │       ├── SearchBar/       # AppSearchBar input
+│   │       ├── SegmentedControl/# AppSegmentedControl tab bar
+│   │       ├── TextField/       # AppTextField form control
+│   │       └── Typography/      # Typography engine
+│   ├── providers/               # AppProvider (Theme, Clerk, Query)
+│   └── theme/                   # HSL Color tokens, Light/Dark themes
+└── app.json                     # Expo branding & dark splash screen configuration
 ```
 
 ---
@@ -456,6 +507,11 @@ npx expo start
 - [x] Interactive Hierarchy Tree View with occupancy filter controls.
 - [x] User management portal with tabbed views for all roles.
 - [x] Centralized Axios client with Clerk JWT token injection.
+- [x] Custom mobile native splash screen & Dark Slate (`#0F172A`) branding theme.
+- [x] Mobile typography system powered by Plus Jakarta Sans font weights.
+- [x] 19+ modern mobile UI component primitives (`AppButton`, `AppBottomSheet`, `AppOtpInput`, `AppAvatarPicker`, etc.).
+- [x] Dynamic light/dark mode theme system (`theme.ts`) & AppProvider context.
+- [x] Live interactive mobile design system showcase screen (`/dev/design-system`).
 
 ### 🟡 In Progress
 - [ ] Mobile App authentication flow integration with Clerk & backend.
