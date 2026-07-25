@@ -27,11 +27,12 @@ export function ThemeToggle() {
       size="icon"
       onClick={toggleTheme}
       title={`Current theme: ${theme}. Click to switch.`}
-      className="text-slate-400 hover:text-slate-100 hover:bg-slate-800"
+      className="text-[var(--on-surface)]/70 hover:text-[var(--on-surface)] hover:bg-[var(--surface-variant)]/50"
     >
-      {theme === "dark" && <Moon className="h-4 w-4 text-purple-400" />}
-      {theme === "light" && <Sun className="h-4 w-4 text-amber-400" />}
-      {theme === "system" && <Laptop className="h-4 w-4 text-blue-400" />}
+      {theme === "dark" && <Moon className="h-4 w-4 text-[var(--primary)]" />}
+      {theme === "light" && <Sun className="h-4 w-4 text-[var(--tertiary)]" />}
+      {theme === "system" && <Laptop className="h-4 w-4 text-[var(--secondary)]" />}
     </Button>
   );
 }
+

@@ -32,41 +32,41 @@ export function UserMenu() {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen((prev) => !prev)}
-        className="flex items-center gap-3 rounded-full p-1 transition-colors hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-500/30"
+        className="flex items-center gap-3 rounded-full p-1 transition-colors hover:bg-[var(--surface-variant)]/60 focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/30"
       >
         {avatarUrl ? (
           <img
             src={avatarUrl}
             alt={displayName}
-            className="h-8 w-8 rounded-full border border-purple-500/30 object-cover"
+            className="h-8 w-8 rounded-full border border-[var(--outline)]/40 object-cover"
           />
         ) : (
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-tr from-purple-600 to-indigo-600 font-semibold text-white">
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-tr from-[var(--primary)] to-[var(--secondary)] font-semibold text-[var(--on-primary)]">
             {displayName.charAt(0).toUpperCase()}
           </div>
         )}
         <div className="hidden text-left md:block">
-          <p className="text-xs font-semibold text-slate-200">{displayName}</p>
-          <p className="text-[10px] text-slate-400">Unique ID: {user?.uniqueId || "N/A"}</p>
+          <p className="text-xs font-semibold text-[var(--on-surface)]">{displayName}</p>
+          <p className="text-[10px] text-[var(--on-surface)]/60">Unique ID: {user?.uniqueId || "N/A"}</p>
         </div>
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-64 rounded-xl border border-slate-800 bg-slate-900 p-2 text-slate-100 shadow-2xl backdrop-blur-md z-50 animate-in fade-in-0 zoom-in-95">
-          <div className="border-b border-slate-800/80 px-3 py-2.5">
-            <p className="text-sm font-semibold text-slate-100">{displayName}</p>
-            <p className="text-xs text-slate-400 truncate">{displayEmail}</p>
+        <div className="absolute right-0 mt-2 w-64 rounded-xl border border-[var(--outline)]/40 bg-[var(--surface)] p-2 text-[var(--on-surface)] shadow-2xl backdrop-blur-md z-50 animate-in fade-in-0 zoom-in-95">
+          <div className="border-b border-[var(--outline)]/30 px-3 py-2.5">
+            <p className="text-sm font-semibold text-[var(--on-surface)]">{displayName}</p>
+            <p className="text-xs text-[var(--on-surface)]/60 truncate">{displayEmail}</p>
             <div className="mt-2 flex items-center justify-between">
               {primaryRole && <RoleBadge role={primaryRole} />}
-              <span className="text-[10px] font-mono text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded border border-purple-500/20">
+              <span className="text-[10px] font-mono font-semibold text-[var(--tertiary)] bg-[var(--tertiary-container)]/50 px-2 py-0.5 rounded border border-[var(--tertiary)]/30">
                 #{user?.uniqueId}
               </span>
             </div>
           </div>
 
           {society && (
-            <div className="border-b border-slate-800/80 px-3 py-2 text-xs text-slate-400 flex items-center gap-2">
-              <Building className="h-3.5 w-3.5 text-purple-400" />
+            <div className="border-b border-[var(--outline)]/30 px-3 py-2 text-xs text-[var(--on-surface)]/70 flex items-center gap-2">
+              <Building className="h-3.5 w-3.5 text-[var(--primary)]" />
               <span className="truncate">{society.name} ({society.societyCode})</span>
             </div>
           )}
@@ -75,26 +75,26 @@ export function UserMenu() {
             <Link
               href="/profile"
               onClick={() => setIsOpen(false)}
-              className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs text-slate-300 transition-colors hover:bg-slate-800 hover:text-white"
+              className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs text-[var(--on-surface)]/80 transition-colors hover:bg-[var(--surface-variant)]/60 hover:text-[var(--on-surface)]"
             >
-              <UserIcon className="h-4 w-4 text-purple-400" />
+              <UserIcon className="h-4 w-4 text-[var(--primary)]" />
               Profile Details
             </Link>
 
             <Link
               href="/settings"
               onClick={() => setIsOpen(false)}
-              className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs text-slate-300 transition-colors hover:bg-slate-800 hover:text-white"
+              className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs text-[var(--on-surface)]/80 transition-colors hover:bg-[var(--surface-variant)]/60 hover:text-[var(--on-surface)]"
             >
-              <ShieldCheck className="h-4 w-4 text-indigo-400" />
+              <ShieldCheck className="h-4 w-4 text-[var(--secondary)]" />
               Account Settings
             </Link>
           </div>
 
-          <div className="border-t border-slate-800/80 pt-1">
+          <div className="border-t border-[var(--outline)]/30 pt-1">
             <button
               onClick={() => signOut()}
-              className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-xs text-red-400 transition-colors hover:bg-red-500/10"
+              className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-xs text-[var(--error)] transition-colors hover:bg-[var(--error-container)]/50"
             >
               <LogOut className="h-4 w-4" />
               Sign Out
@@ -105,3 +105,4 @@ export function UserMenu() {
     </div>
   );
 }
+

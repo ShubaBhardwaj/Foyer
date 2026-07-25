@@ -3,19 +3,19 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/cn";
 
 const badgeVariants = cva(
-  "inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2",
+  "inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:ring-offset-2",
   {
     variants: {
       variant: {
         default:
-          "border-purple-500/30 bg-purple-500/10 text-purple-400",
+          "border-[var(--primary)]/30 bg-[var(--primary-container)] text-[var(--on-primary-container)]",
         secondary:
-          "border-slate-700 bg-slate-800 text-slate-300",
+          "border-[var(--secondary)]/30 bg-[var(--secondary-container)] text-[var(--on-secondary-container)]",
         destructive:
-          "border-red-500/30 bg-red-500/10 text-red-400",
-        outline: "text-slate-300 border-slate-700",
-        success: "border-emerald-500/30 bg-emerald-500/10 text-emerald-400",
-        warning: "border-amber-500/30 bg-amber-500/10 text-amber-400",
+          "border-[var(--error)]/30 bg-[var(--error-container)] text-[var(--error)]",
+        outline: "text-[var(--on-surface)] border-[var(--outline)]",
+        success: "border-[var(--success)]/30 bg-[var(--success-container)] text-[var(--success)]",
+        warning: "border-[var(--warning)]/30 bg-[var(--warning-container)] text-[var(--warning)]",
       },
     },
     defaultVariants: {
@@ -35,3 +35,4 @@ function Badge({ className, variant, ...props }: BadgeProps) {
 }
 
 export { Badge, badgeVariants };
+
