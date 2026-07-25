@@ -12,6 +12,10 @@ import { complaintRouter } from "./routes/complaint.routes";
 import { noticeRouter } from "./routes/notice.routes";
 import { amenityRouter } from "./routes/amenity.routes";
 import { bookingRouter } from "./routes/booking.routes";
+import { maintenanceRouter } from "./routes/maintenance.routes";
+import { invoiceRouter } from "./routes/invoice.routes";
+import { paymentRouter } from "./routes/payment.routes";
+import { communityRouter } from "./routes/community.routes";
 import errorMiddleware from "./middleware/errorMiddleware";
 
 const app = express();
@@ -31,6 +35,10 @@ app.use("/complaints", complaintRouter);
 app.use("/notices", noticeRouter);
 app.use("/amenities", amenityRouter);
 app.use("/bookings", bookingRouter);
+app.use("/maintenances", maintenanceRouter);
+app.use("/invoices", invoiceRouter);
+app.use("/payments", paymentRouter);
+app.use("/community", communityRouter);
 
 // Health check
 app.get("/", (_req, res) => {
