@@ -16,6 +16,7 @@ import { maintenanceRouter } from "./routes/maintenance.routes";
 import { invoiceRouter } from "./routes/invoice.routes";
 import { paymentRouter } from "./routes/payment.routes";
 import { communityRouter } from "./routes/community.routes";
+import { dashboardRouter } from "./routes/dashboard.routes";
 import errorMiddleware from "./middleware/errorMiddleware";
 
 const app = express();
@@ -39,6 +40,7 @@ app.use("/maintenances", maintenanceRouter);
 app.use("/invoices", invoiceRouter);
 app.use("/payments", paymentRouter);
 app.use("/community", communityRouter);
+app.use("/dashboard", dashboardRouter);
 
 // Health check
 app.get("/", (_req, res) => {

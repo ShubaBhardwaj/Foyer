@@ -53,6 +53,13 @@ export enum Permission {
   COMMUNITY_READ = "community:read",
   COMMUNITY_MODERATE = "community:moderate",
   COMMUNITY_DELETE = "community:delete",
+  // Dashboard & Analytics Subsystem
+  DASHBOARD_READ = "dashboard:read",
+  ANALYTICS_READ = "analytics:read",
+
+  // Notification Center Subsystem
+  NOTIFICATION_READ = "notification:read",
+  NOTIFICATION_DELETE = "notification:delete",
 
   // User & Society Management
   USER_CREATE = "user:create",
@@ -118,6 +125,8 @@ export const ROLE_PERMISSIONS: Readonly<Record<UserRole, readonly Permission[]>>
     Permission.COMMUNITY_READ,
     Permission.COMMUNITY_MODERATE,
     Permission.COMMUNITY_DELETE,
+    Permission.DASHBOARD_READ,
+    Permission.ANALYTICS_READ,
     Permission.USER_CREATE,
     Permission.USER_READ,
     Permission.USER_UPDATE,
@@ -149,6 +158,8 @@ export const ROLE_PERMISSIONS: Readonly<Record<UserRole, readonly Permission[]>>
     Permission.COMMUNITY_CREATE,
     Permission.COMMUNITY_READ,
     Permission.COMMUNITY_DELETE,
+    Permission.DASHBOARD_READ,
+    Permission.ANALYTICS_READ,
     Permission.MAINTENANCE_READ,
     Permission.MAINTENANCE_PAY,
     Permission.USER_READ,
@@ -174,6 +185,7 @@ export const ROLE_PERMISSIONS: Readonly<Record<UserRole, readonly Permission[]>>
     Permission.COMMUNITY_CREATE,
     Permission.COMMUNITY_READ,
     Permission.COMMUNITY_DELETE,
+    Permission.DASHBOARD_READ,
     Permission.MAINTENANCE_READ,
     Permission.MAINTENANCE_PAY,
     Permission.USER_READ,
@@ -189,6 +201,7 @@ export const ROLE_PERMISSIONS: Readonly<Record<UserRole, readonly Permission[]>>
     Permission.NOTICE_READ,
     Permission.POLL_READ,
     Permission.COMMUNITY_READ,
+    Permission.DASHBOARD_READ,
     Permission.USER_READ,
     Permission.FILE_UPLOAD,
     Permission.ACTIVITY_VIEW,
