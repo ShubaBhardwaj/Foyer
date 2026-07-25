@@ -80,6 +80,26 @@ export default function HomeScreen() {
     }
   };
 
+  // Handler for Overview Stat Card Press
+  const handleOverviewStatPress = (statId: string) => {
+    switch (statId) {
+      case "visitors":
+        // TODO: Navigate to Visitor Analytics / History
+        break;
+      case "pending_approvals":
+        // TODO: Filter pending approvals
+        break;
+      case "open_complaints":
+        // TODO: Navigate to open complaints
+        break;
+      case "amenities_booked":
+        // TODO: Navigate to booked amenities
+        break;
+      default:
+        break;
+    }
+  };
+
   // Handler for Approving Visitor
   const handleApproveVisitor = (visitorId: string) => {
     // TODO: Call API to approve visitor request
@@ -167,6 +187,7 @@ export default function HomeScreen() {
             <AppCard
               key={stat.id}
               variant="outlined"
+              onPress={() => handleOverviewStatPress(stat.id)}
               style={styles.overviewCard}
               accessibilityLabel={`${stat.title}: ${stat.value}`}
             >

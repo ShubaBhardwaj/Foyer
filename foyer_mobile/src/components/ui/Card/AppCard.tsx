@@ -5,6 +5,7 @@ import Animated, {
   useAnimatedStyle,
   withTiming,
 } from "react-native-reanimated";
+import * as Haptics from "expo-haptics";
 import { useAppTheme, spacing, radius, elevation as elevationTokens, animation } from "@/theme";
 import type { AppCardProps, CardVariant } from "./types";
 
@@ -38,12 +39,18 @@ export const AppCard = React.memo(function AppCard({
     }
   }, [onPress, scale]);
 
+  const handlePress = useCallback(() => {
+    if (!onPress) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    onPress();
+  }, [onPress]);
+
   const variantStyle = getVariantStyle(variant, theme.colors);
   const Container = onPress ? AnimatedPressable : View;
 
   const containerProps = onPress
     ? {
-        onPress,
+        onPress: handlePress,
         onPressIn: handlePressIn,
         onPressOut: handlePressOut,
         accessibilityRole: "button" as const,
