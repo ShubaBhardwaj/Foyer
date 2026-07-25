@@ -29,6 +29,8 @@ export enum Permission {
   // Amenities Subsystem
   AMENITY_CREATE = "amenity:create",
   AMENITY_READ = "amenity:read",
+  AMENITY_UPDATE = "amenity:update",
+  AMENITY_DELETE = "amenity:delete",
   AMENITY_BOOK = "amenity:book",
   AMENITY_APPROVE = "amenity:approve",
 
@@ -83,6 +85,8 @@ export const ROLE_PERMISSIONS: Readonly<Record<UserRole, readonly Permission[]>>
     Permission.NOTICE_DELETE,
     Permission.AMENITY_CREATE,
     Permission.AMENITY_READ,
+    Permission.AMENITY_UPDATE,
+    Permission.AMENITY_DELETE,
     Permission.AMENITY_BOOK,
     Permission.AMENITY_APPROVE,
     Permission.MAINTENANCE_CREATE,

@@ -10,6 +10,8 @@ import { visitorRouter } from "./routes/visitor.routes";
 import { uploadRouter } from "./routes/upload.routes";
 import { complaintRouter } from "./routes/complaint.routes";
 import { noticeRouter } from "./routes/notice.routes";
+import { amenityRouter } from "./routes/amenity.routes";
+import { bookingRouter } from "./routes/booking.routes";
 import errorMiddleware from "./middleware/errorMiddleware";
 
 const app = express();
@@ -27,6 +29,8 @@ app.use("/visitors", visitorRouter);
 app.use("/uploads", uploadRouter);
 app.use("/complaints", complaintRouter);
 app.use("/notices", noticeRouter);
+app.use("/amenities", amenityRouter);
+app.use("/bookings", bookingRouter);
 
 // Health check
 app.get("/", (_req, res) => {

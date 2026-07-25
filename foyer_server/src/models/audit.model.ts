@@ -27,8 +27,13 @@ export enum AuditAction {
 
   // Amenity / Booking Module
   AMENITY_CREATED = "AMENITY_CREATED",
+  AMENITY_UPDATED = "AMENITY_UPDATED",
+  AMENITY_DELETED = "AMENITY_DELETED",
   AMENITY_BOOKED = "AMENITY_BOOKED",
   AMENITY_CANCELLED = "AMENITY_CANCELLED",
+  BOOKING_CREATED = "BOOKING_CREATED",
+  BOOKING_APPROVED = "BOOKING_APPROVED",
+  BOOKING_CANCELLED = "BOOKING_CANCELLED",
 
   // User & Account Module
   USER_CREATED = "USER_CREATED",
@@ -54,6 +59,7 @@ export enum AuditResourceType {
   NOTICE = "Notice",
   AMENITY = "Amenity",
   BOOKING = "Booking",
+  AMENITY_BOOKING = "Booking",
   USER = "User",
   SOCIETY = "Society",
   STRUCTURE = "Structure",
