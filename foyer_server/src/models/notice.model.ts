@@ -162,7 +162,5 @@ noticeSchema.index({ society: 1, status: 1 });
 noticeSchema.index({ society: 1, publishAt: -1 });
 noticeSchema.index({ society: 1, expiresAt: 1 });
 noticeSchema.index({ society: 1, isPinned: -1, publishAt: -1 });
-noticeSchema.index({ category: 1 });
-noticeSchema.index({ visibility: 1 });
 
 export default model<INotice>("Notice", noticeSchema);

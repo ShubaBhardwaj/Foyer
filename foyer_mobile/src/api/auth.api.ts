@@ -8,11 +8,16 @@ import {
 export const authApi = {
   async completeLogin(dto: CompleteLoginRequestDto): Promise<CompleteLoginResponseDto> {
     const res = await apiClient.post<CompleteLoginResponseDto>("/auth/complete-login", dto);
-    return res.data;
+    // Express backend wraps response in ApiResponse: { success: true, message: "...", data: { user: ..., society: ... } }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const responseData = (res.data as any)?.data || res.data;
+    return responseData;
   },
 
   async getMe(): Promise<GetMeResponseDto> {
     const res = await apiClient.get<GetMeResponseDto>("/auth/me");
-    return res.data;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const responseData = (res.data as any)?.data || res.data;
+    return responseData;
   },
 };

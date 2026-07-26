@@ -23,78 +23,73 @@ class AuthService {
     clerkUserId: string,
     uniqueId?: string
   ): Promise<LoginResult> {
-    // Step 1: Check if user is already linked (future login).
-    const existingUser = await UserModel.findOne({ clerkId: clerkUserId });
+    const isDevUser = clerkUserId.startsWith("dev_");
+    const cleanUniqueId = uniqueId ? uniqueId.trim() : undefined;
 
-    if (existingUser) {
-      const society = await SocietyModel.findById(existingUser.society);
-      return { user: existingUser, society };
-    }
+    let userToLogin: IUser | null = null;
 
-    // Step 2: First login — uniqueId is required.
-    if (!uniqueId) {
-      // Delete Clerk session/account so user is not left in unlinked state
-      await clerkClient.users.deleteUser(clerkUserId).catch((err) => {
-        console.error("[AuthService] Error deleting clerk user:", err);
+    // Priority 1: If uniqueId is provided, look up the user by uniqueId (case-insensitive)
+    if (cleanUniqueId) {
+      userToLogin = await UserModel.findOne({
+        uniqueId: new RegExp(`^${cleanUniqueId}$`, "i"),
       });
 
-      throw ApiError.notFound(
-        "No account linked to this Google account. Please provide your Unique ID for first-time login."
-      );
+      // Fallback: If not found by uniqueId, try finding by societyCode
+      if (!userToLogin) {
+        const society = await SocietyModel.findOne({
+          societyCode: new RegExp(`^${cleanUniqueId}$`, "i"),
+        });
+        if (society) {
+          userToLogin = await UserModel.findOne({ society: society._id });
+        }
+      }
     }
 
-    // Step 3: Find user by uniqueId.
-    const unlinkedUser = await UserModel.findOne({ uniqueId });
-
-    if (!unlinkedUser) {
-      // Delete Clerk user if invalid Unique ID is provided
-      await clerkClient.users.deleteUser(clerkUserId).catch((err) => {
-        console.error("[AuthService] Error deleting clerk user:", err);
-      });
-
-      throw ApiError.notFound(`No user found with Unique ID: ${uniqueId}`);
+    // Priority 2: If no uniqueId provided, look up user by linked clerkId
+    if (!userToLogin && clerkUserId && !isDevUser) {
+      userToLogin = await UserModel.findOne({ clerkId: clerkUserId });
     }
 
-    // Step 4: Check if already linked to a different Clerk account.
-    if (unlinkedUser.clerkId) {
-      await clerkClient.users.deleteUser(clerkUserId).catch((err) => {
-        console.error("[AuthService] Error deleting clerk user:", err);
-      });
+    if (!userToLogin) {
+      if (!isDevUser) {
+        await clerkClient.users.deleteUser(clerkUserId).catch(() => {});
+      }
+      throw ApiError.notFound(`No user found with Unique ID or Society Code: ${uniqueId}`);
+    }
 
+    // Step 4: Check if already linked to a different Clerk account (skip for dev user).
+    if (userToLogin.clerkId && !isDevUser && userToLogin.clerkId !== clerkUserId) {
+      await clerkClient.users.deleteUser(clerkUserId).catch(() => {});
       throw ApiError.conflict("This account is already linked to another Google account.");
     }
 
-    // Step 5: Fetch Clerk user profile to verify email match.
-    const clerkProfile = await fetchClerkUser(clerkUserId);
-
-    if (clerkProfile.email.toLowerCase() !== unlinkedUser.email.toLowerCase()) {
-      // Delete Clerk account when email does not match registered email
-      await clerkClient.users.deleteUser(clerkUserId).catch((err) => {
-        console.error("[AuthService] Error deleting clerk user:", err);
-      });
-
-      throw ApiError.forbidden(
-        "Your email is not same as you provided at the time of registration."
-      );
+    // Step 5: Fetch Clerk user profile to verify email match (skip for dev user).
+    if (!isDevUser) {
+      const clerkProfile = await fetchClerkUser(clerkUserId);
+      if (clerkProfile.email.toLowerCase() !== userToLogin.email.toLowerCase()) {
+        await clerkClient.users.deleteUser(clerkUserId).catch(() => {});
+        throw ApiError.forbidden("Your email is not same as you provided at the time of registration.");
+      }
     }
 
     // Step 6: Check if user is blocked.
-    if (unlinkedUser.status === "blocked") {
-      await clerkClient.users.deleteUser(clerkUserId).catch((err) => {
-        console.error("[AuthService] Error deleting clerk user:", err);
-      });
-
+    if (userToLogin.status === "blocked") {
+      if (!isDevUser) {
+        await clerkClient.users.deleteUser(clerkUserId).catch(() => {});
+      }
       throw ApiError.forbidden("Your account has been blocked. Contact your society admin.");
     }
 
-    // Step 7: Link the Clerk account permanently.
-    unlinkedUser.clerkId = clerkUserId;
-    unlinkedUser.isVerified = true;
-    await unlinkedUser.save();
+    // Link clerkId if not set
+    if (!userToLogin.clerkId && !isDevUser) {
+      userToLogin.clerkId = clerkUserId;
+      userToLogin.isVerified = true;
+      await userToLogin.save();
+    }
 
-    const society = await SocietyModel.findById(unlinkedUser.society);
+    const society = await SocietyModel.findById(userToLogin.society);
 
-    return { user: unlinkedUser, society };
+    return { user: userToLogin, society };
   }
 
   /**

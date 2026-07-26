@@ -186,7 +186,6 @@ const visitorSchema = new Schema<IVisitor>(
 // Indexes
 visitorSchema.index({ society: 1, resident: 1, createdAt: -1 });
 visitorSchema.index({ society: 1, status: 1, createdAt: -1 });
-visitorSchema.index({ entryCode: 1 }, { unique: true });
 visitorSchema.index({ expectedArrival: 1 });
 visitorSchema.index({ phoneNumber: 1 });
 

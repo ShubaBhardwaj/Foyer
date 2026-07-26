@@ -112,6 +112,52 @@ class SocietyService {
 
     return code;
   }
+
+  /**
+   * Validate a society code or user uniqueId.
+   */
+  async validateCode(code: string): Promise<{
+    valid: boolean;
+    societyId?: string;
+    societyName?: string;
+    message?: string;
+  }> {
+    if (!code || typeof code !== "string") {
+      return { valid: false, message: "Code is required." };
+    }
+
+    const cleanCode = code.trim();
+
+    // 1. Check if user uniqueId matches (case-insensitive)
+    const user = await UserModel.findOne({
+      uniqueId: new RegExp(`^${cleanCode}$`, "i"),
+    });
+    if (user) {
+      const society = await SocietyModel.findById(user.society);
+      return {
+        valid: true,
+        societyId: society?._id.toString(),
+        societyName: society?.name || "Foyer Residential Society",
+      };
+    }
+
+    // 2. Check if societyCode matches
+    const society = await SocietyModel.findOne({
+      societyCode: new RegExp(`^${cleanCode}$`, "i"),
+    });
+    if (society) {
+      return {
+        valid: true,
+        societyId: society._id.toString(),
+        societyName: society.name,
+      };
+    }
+
+    return {
+      valid: false,
+      message: "Invalid code. No society or user invitation found for this code.",
+    };
+  }
 }
 
 export default new SocietyService();

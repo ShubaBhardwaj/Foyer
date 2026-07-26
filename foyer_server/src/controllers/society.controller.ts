@@ -40,6 +40,17 @@ class SocietyController {
 
     ApiResponse.ok(res, "Society fetched.", { society });
   });
+
+  /**
+   * POST /society/validate-code
+   *
+   * Public endpoint to validate a 6-character society code or unique ID.
+   */
+  validateCode = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    const { code } = req.body as { code: string };
+    const result = await societyService.validateCode(code);
+    ApiResponse.ok(res, "Code validation completed.", result);
+  });
 }
 
 export default new SocietyController();

@@ -7,24 +7,11 @@ import {
 
 export const societyApi = {
   async validateCode(dto: ValidateSocietyCodeRequestDto): Promise<ValidateSocietyCodeResponseDto> {
-    try {
-      const res = await apiClient.post<ValidateSocietyCodeResponseDto>("/society/validate-code", dto);
-      return res.data;
-    } catch {
-      // Client-side fallback / local check if backend doesn't have validate-code route yet
-      if (dto.code && dto.code.length >= 6) {
-        return {
-          valid: true,
-          societyId: "soc_demo_1",
-          societyName: "Green Valley Residency",
-          themeColor: "#2563EB",
-        };
-      }
-      return {
-        valid: false,
-        message: "Invalid Society Code. Please check and try again.",
-      };
-    }
+    const res = await apiClient.post<ValidateSocietyCodeResponseDto>("/society/validate-code", dto);
+    // Express backend wraps response in ApiResponse structure (e.g. { success: true, data: { ... } })
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const responseData = (res.data as any)?.data || res.data;
+    return responseData;
   },
 
   async getMySociety(): Promise<{ society: SocietyDto }> {

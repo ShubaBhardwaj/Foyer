@@ -26,6 +26,15 @@ router.post(
 );
 
 /**
+ * POST /society/validate-code
+ * Public endpoint to validate a 6-character society code or unique ID.
+ */
+router.post(
+  "/validate-code",
+  societyController.validateCode.bind(societyController)
+);
+
+/**
  * GET /society/me
  * Returns the authenticated user's society.
  */

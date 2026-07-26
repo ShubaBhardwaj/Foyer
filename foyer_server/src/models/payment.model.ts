@@ -129,6 +129,5 @@ const paymentSchema = new Schema<IPayment>(
 // Compound Indexes
 paymentSchema.index({ society: 1, createdAt: -1 });
 paymentSchema.index({ resident: 1, createdAt: -1 });
-paymentSchema.index({ invoice: 1 });
 
 export default model<IPayment>("Payment", paymentSchema);
