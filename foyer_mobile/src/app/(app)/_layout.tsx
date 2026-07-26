@@ -1,6 +1,6 @@
 import React from "react";
 import { View, ActivityIndicator, StyleSheet } from "react-native";
-import { Stack } from "expo-router";
+import { Stack, Redirect } from "expo-router";
 import { useAuthInitializer } from "@/hooks/useAuthInitializer";
 import { useAuthStore } from "@/store/use-auth-store";
 import { colors } from "@/theme";
@@ -19,14 +19,12 @@ export default function AppLayout() {
     );
   }
 
-  // 2. Conditionally render ONLY auth stack or tabs stack to guarantee route isolation
+  // 2. Both route groups must be registered so Expo Router
+  //    knows about them. Use `redirect` to control access.
   return (
     <Stack screenOptions={{ headerShown: false }}>
-      {!isAuthenticated ? (
-        <Stack.Screen name="(auth)" />
-      ) : (
-        <Stack.Screen name="(tabs)" />
-      )}
+      <Stack.Screen name="(auth)" redirect={isAuthenticated} />
+      <Stack.Screen name="(tabs)" redirect={!isAuthenticated} />
     </Stack>
   );
 }
