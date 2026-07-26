@@ -16,7 +16,7 @@ export function useAuthInitializer() {
   // eslint-disable-next-line react-hooks/rules-of-hooks
   const clerkAuth = clerk?.useAuth
     // eslint-disable-next-line react-hooks/rules-of-hooks
-    ? clerk.useAuth()
+    ? clerk.useAuth({ treatPendingAsSignedOut: false })
     : { getToken: async () => null as string | null, isSignedIn: undefined, isLoaded: true };
   
   // eslint-disable-next-line react-hooks/rules-of-hooks

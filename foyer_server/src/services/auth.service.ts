@@ -81,8 +81,8 @@ class AuthService {
     }
 
     // Link clerkId if not set
-    if (!userToLogin.clerkId && !isDevUser) {
-      userToLogin.clerkId = clerkUserId;
+    if (!userToLogin.clerkId) {
+      userToLogin.clerkId = isDevUser ? `dev_clerk_user_${userToLogin._id.toString()}` : clerkUserId;
       userToLogin.isVerified = true;
       await userToLogin.save();
     }
