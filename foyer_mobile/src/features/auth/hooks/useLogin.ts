@@ -176,8 +176,10 @@ export function useLogin() {
     setIsLinkingLoading(true);
     try {
       const linkRes = await authRepository.linkAccount({
+        clerkId: clerkUser?.id,
         societyCode: code,
       });
+
 
       if (!linkRes.user || !linkRes.user._id) {
         throw new Error("Failed to link account.");

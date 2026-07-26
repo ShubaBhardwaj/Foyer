@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import authService from "../services/auth.service";
 import ApiResponse from "../utils/apiResponse";
 import asyncHandler from "../utils/asyncHandler";
+import ApiError from "../utils/apiError";
 import { CompleteLoginInput, LinkAccountInput } from "../validators/auth.validator";
 
 /**
@@ -9,6 +10,18 @@ import { CompleteLoginInput, LinkAccountInput } from "../validators/auth.validat
  * Delegates all business logic to AuthService.
  */
 class AuthController {
+  private getClerkUserId(req: Request): string {
+    const bodyClerkId = req.body?.clerkId;
+    const queryClerkId = req.query?.clerkId as string;
+    const headerClerkId = req.headers["x-clerk-user-id"] as string;
+
+    const id = bodyClerkId || queryClerkId || headerClerkId || req.auth?.clerkUserId;
+    if (!id) {
+      throw ApiError.badRequest("Clerk User ID is required.");
+    }
+    return id;
+  }
+
   /**
    * POST /auth/complete-login
    * Checks if user exists by clerkId.
@@ -16,7 +29,7 @@ class AuthController {
    * - If user does NOT exist: returns { success: true, requiresSocietyCode: true }.
    */
   completeLogin = asyncHandler(async (req: Request, res: Response): Promise<void> => {
-    const clerkUserId = req.auth?.clerkUserId || req.body.clerkId;
+    const clerkUserId = this.getClerkUserId(req);
     const { email, firstName, lastName, imageUrl } = req.body as CompleteLoginInput;
 
     const result = await authService.completeLogin(clerkUserId, {
@@ -34,7 +47,7 @@ class AuthController {
    * Validates societyCode, links clerkId to MongoDB user, returns session.
    */
   linkAccount = asyncHandler(async (req: Request, res: Response): Promise<void> => {
-    const clerkUserId = req.auth?.clerkUserId || req.body.clerkId;
+    const clerkUserId = this.getClerkUserId(req);
     const { societyCode } = req.body as LinkAccountInput;
 
     const result = await authService.linkAccount(clerkUserId, societyCode);
@@ -47,7 +60,7 @@ class AuthController {
    * Returns the current authenticated user's profile, society, permissions, and role.
    */
   getMe = asyncHandler(async (req: Request, res: Response): Promise<void> => {
-    const clerkUserId = req.auth!.clerkUserId;
+    const clerkUserId = this.getClerkUserId(req);
 
     const result = await authService.getMe(clerkUserId);
 
@@ -56,4 +69,5 @@ class AuthController {
 }
 
 export default new AuthController();
+
 

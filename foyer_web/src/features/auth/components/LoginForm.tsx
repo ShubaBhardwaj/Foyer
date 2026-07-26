@@ -56,8 +56,10 @@ export function LoginForm() {
   const linkAccountMutation = useMutation({
     mutationFn: async () => {
       const res = await authApi.linkAccount({
+        clerkId: clerkUser?.id,
         societyCode: societyCode.trim(),
       });
+
       return res.data;
     },
     onSuccess: (data) => {
