@@ -7,12 +7,12 @@ import { getClerkModule } from "@/lib/clerk";
 
 export function useAuthInitializer() {
   const setUserSession = useAuthStore((s) => s.setUserSession);
+  const setRequiresSocietyCode = useAuthStore((s) => s.setRequiresSocietyCode);
   const setInitialized = useAuthStore((s) => s.setInitialized);
   const logoutStore = useAuthStore((s) => s.logout);
 
   const clerk = getClerkModule();
   
-  // Safely call Clerk hooks if module is available
   // eslint-disable-next-line react-hooks/rules-of-hooks
   const clerkAuth = clerk?.useAuth
     // eslint-disable-next-line react-hooks/rules-of-hooks
@@ -25,7 +25,6 @@ export function useAuthInitializer() {
   const { getToken, isSignedIn, isLoaded: isClerkLoaded } = clerkAuth;
   const clerkUser = clerkUserResult.user;
 
-  // Helper for full session cleanup on failure or 401
   const performFullLogout = async () => {
     try {
       if (clerk && clerk.useClerk) {
@@ -33,7 +32,7 @@ export function useAuthInitializer() {
         if (signOut) await signOut();
       }
     } catch {
-      // Clerk unavailable or signOut failed
+      // Clerk unavailable
     }
     queryClient.clear();
     logoutStore();
@@ -41,13 +40,11 @@ export function useAuthInitializer() {
   };
 
   useEffect(() => {
-    // Inject token provider into Axios client
     setAuthTokenProvider(async () => {
       if (!isSignedIn) return null;
       return await getToken();
     });
 
-    // Register 401 unauthenticated handler
     setUnauthenticatedHandler(() => {
       performFullLogout();
     });
@@ -59,7 +56,6 @@ export function useAuthInitializer() {
     let isMounted = true;
 
     async function syncBackendSession() {
-      // If no Clerk session exists, clear backend session and finish initialization
       if (!isSignedIn) {
         if (isMounted) {
           logoutStore();
@@ -69,13 +65,56 @@ export function useAuthInitializer() {
       }
 
       try {
-        // Step 1: Call GET /auth/me to verify existing session with backend truth
-        const meRes = await authRepository.getMe();
+        // Step 1: Call GET /auth/me to restore authenticated session from backend
+        try {
+          const meRes = await authRepository.getMe();
+          if (meRes && meRes.user && meRes.user._id && isMounted) {
+            setUserSession(
+              meRes.user,
+              meRes.society,
+              clerkUser
+                ? {
+                    id: clerkUser.id,
+                    email: clerkUser.primaryEmailAddress?.emailAddress,
+                    fullName: clerkUser.fullName || undefined,
+                    imageUrl: clerkUser.imageUrl,
+                  }
+                : null,
+              meRes.role,
+              meRes.permissions
+            );
+            setInitialized(true);
+            return;
+          }
+        } catch (meError: any) {
+          // If 404 or missing account, proceed to completeLogin evaluation
+        }
 
-        if (meRes && meRes.user && meRes.user._id && isMounted) {
+        // Step 2: Attempt completeLogin to check if user needs society code
+        const clerkMeta = clerkUser
+          ? {
+              clerkId: clerkUser.id,
+              email: clerkUser.primaryEmailAddress?.emailAddress,
+              firstName: clerkUser.firstName || undefined,
+              lastName: clerkUser.lastName || undefined,
+              imageUrl: clerkUser.imageUrl,
+            }
+          : {};
+
+        const completeRes = await authRepository.completeLogin(clerkMeta);
+
+        if (completeRes.requiresSocietyCode) {
+          if (isMounted) {
+            setRequiresSocietyCode(true);
+            setInitialized(true);
+          }
+          return;
+        }
+
+        if (completeRes.user && completeRes.user._id && isMounted) {
           setUserSession(
-            meRes.user,
-            meRes.society,
+            completeRes.user,
+            completeRes.society,
             clerkUser
               ? {
                   id: clerkUser.id,
@@ -83,40 +122,19 @@ export function useAuthInitializer() {
                   fullName: clerkUser.fullName || undefined,
                   imageUrl: clerkUser.imageUrl,
                 }
-              : null
+              : null,
+            completeRes.role,
+            completeRes.permissions
           );
           setInitialized(true);
           return;
         }
 
-        // Step 2: If GET /auth/me returned empty, attempt complete-login sync
-        const completeRes = await authRepository.completeLogin({});
-        const mongoUser = (completeRes as any)?.user || (completeRes as any)?.data?.user;
-        const societyObj = (completeRes as any)?.society || (completeRes as any)?.data?.society;
-
-        if (mongoUser && mongoUser._id && isMounted) {
-          setUserSession(
-            mongoUser,
-            societyObj,
-            clerkUser
-              ? {
-                  id: clerkUser.id,
-                  email: clerkUser.primaryEmailAddress?.emailAddress,
-                  fullName: clerkUser.fullName || undefined,
-                  imageUrl: clerkUser.imageUrl,
-                }
-              : null
-          );
-          setInitialized(true);
-          return;
-        }
-
-        // If backend verification returned invalid data, purge session
         if (isMounted) {
           await performFullLogout();
         }
       } catch (err) {
-        console.warn("[useAuthInitializer] Backend verification failed on startup — purging session:", err);
+        console.warn("[useAuthInitializer] Backend verification failed on startup:", err);
         if (isMounted) {
           await performFullLogout();
         }
@@ -128,10 +146,11 @@ export function useAuthInitializer() {
     return () => {
       isMounted = false;
     };
-  }, [isClerkLoaded, isSignedIn, clerkUser, setUserSession, setInitialized, logoutStore]);
+  }, [isClerkLoaded, isSignedIn, clerkUser, setUserSession, setRequiresSocietyCode, setInitialized, logoutStore]);
 
   return {
     isLoaded: isClerkLoaded,
     isSignedIn,
   };
 }
+

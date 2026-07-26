@@ -2,15 +2,24 @@ import { z } from "zod";
 
 /**
  * POST /auth/complete-login
- *
- * - uniqueId is optional: only provided during first login for non-owner roles.
- * - If omitted, the backend tries to find the user by clerkId (future login).
  */
 export const completeLoginSchema = z.object({
-  uniqueId: z
-    .string()
-    .min(1, "Unique ID cannot be empty.")
-    .optional(),
+  clerkId: z.string().optional(),
+  email: z.string().email().optional(),
+  firstName: z.string().optional(),
+  lastName: z.string().optional(),
+  imageUrl: z.string().optional(),
 });
 
 export type CompleteLoginInput = z.infer<typeof completeLoginSchema>;
+
+/**
+ * POST /auth/link-account
+ */
+export const linkAccountSchema = z.object({
+  clerkId: z.string().optional(),
+  societyCode: z.string().min(1, "Society Code is required."),
+});
+
+export type LinkAccountInput = z.infer<typeof linkAccountSchema>;
+

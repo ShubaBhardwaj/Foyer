@@ -8,7 +8,7 @@ export interface UserMongoDto {
   email: string;
   phone?: string;
   roles?: UserRole[];
-  role: "RESIDENT" | "ADMIN" | "GUARD" | "OWNER" | "resident" | "admin" | "guard" | "owner" | "super_admin";
+  role: UserRole;
   permissions?: string[];
   status: "ACTIVE" | "INACTIVE" | "PENDING" | "active" | "blocked";
   society?: string | SocietyDto;
@@ -34,33 +34,43 @@ export interface SocietyDto {
   themeColor?: string;
 }
 
-export interface ValidateSocietyCodeRequestDto {
-  code: string;
-}
-
-export interface ValidateSocietyCodeResponseDto {
-  valid: boolean;
-  societyId?: string;
-  societyName?: string;
-  logo?: string;
-  themeColor?: string;
-  message?: string;
-}
-
 export interface CompleteLoginRequestDto {
-  uniqueId?: string;
-  societyCode?: string;
+  clerkId?: string;
+  email?: string;
+  firstName?: string;
+  lastName?: string;
+  imageUrl?: string;
 }
 
 export interface CompleteLoginResponseDto {
   success: boolean;
+  requiresSocietyCode?: boolean;
   message?: string;
+  user?: UserMongoDto;
+  society?: SocietyDto;
+  role?: UserRole;
+  permissions?: string[];
+}
+
+export interface LinkAccountRequestDto {
+  clerkId?: string;
+  societyCode: string;
+}
+
+export interface LinkAccountResponseDto {
+  success: boolean;
   user: UserMongoDto;
   society?: SocietyDto;
+  role?: UserRole;
+  permissions?: string[];
+  message?: string;
 }
 
 export interface GetMeResponseDto {
   success: boolean;
   user: UserMongoDto;
   society?: SocietyDto;
+  role?: UserRole;
+  permissions?: string[];
 }
+

@@ -1,111 +1,180 @@
-import UserModel, { IUser } from "../models/User";
+import UserModel, { IUser, Role } from "../models/User";
 import SocietyModel, { ISociety } from "../models/Society";
-import { fetchClerkUser } from "../utils/clerkUser";
-import { clerkClient } from "../config/clerk";
 import ApiError from "../utils/apiError";
+import { ROLE_PERMISSIONS, Permission } from "../constants/permissions";
+import { UserRole } from "../constants/enums";
 
-interface LoginResult {
+export interface AuthSuccessPayload {
+  success: true;
+  requiresSocietyCode?: false;
   user: IUser;
   society: ISociety | null;
+  role: string;
+  permissions: string[];
 }
 
+export interface AuthRequiresCodePayload {
+  success: true;
+  requiresSocietyCode: true;
+}
+
+export type CompleteLoginResult = AuthSuccessPayload | AuthRequiresCodePayload;
+
 /**
- * AuthService — handles authentication and account linking logic using Mongoose ODM directly.
+ * AuthService — Handles authentication, account linking, and session lookup.
+ * MongoDB is the single source of truth for roles, permissions, and society membership.
  */
 class AuthService {
   /**
-   * Complete login flow.
-   *
-   * @param clerkUserId - The Clerk user ID from the verified JWT.
-   * @param uniqueId - Optional 6-digit Unique ID for first-time login.
+   * Helper to derive primary role and combined permissions from MongoDB User roles.
    */
-  async completeLogin(
-    clerkUserId: string,
-    uniqueId?: string
-  ): Promise<LoginResult> {
-    const isDevUser = clerkUserId.startsWith("dev_");
-    const cleanUniqueId = uniqueId ? uniqueId.trim() : undefined;
+  private buildRoleAndPermissions(user: IUser): { role: string; permissions: string[] } {
+    const roles = user.roles && user.roles.length > 0 ? user.roles : [Role.RESIDENT];
+    const primaryRole = roles[0];
 
-    let userToLogin: IUser | null = null;
+    const permissionSet = new Set<string>();
+    roles.forEach((r) => {
+      // Map User model Role to UserRole enum if needed
+      const mappedRole = r as unknown as UserRole;
+      const perms = ROLE_PERMISSIONS[mappedRole] || [];
+      perms.forEach((p) => permissionSet.add(p));
+    });
 
-    // Priority 1: If uniqueId is provided, look up the user by uniqueId (case-insensitive)
-    if (cleanUniqueId) {
-      userToLogin = await UserModel.findOne({
-        uniqueId: new RegExp(`^${cleanUniqueId}$`, "i"),
-      });
-
-      // Fallback: If not found by uniqueId, try finding by societyCode
-      if (!userToLogin) {
-        const society = await SocietyModel.findOne({
-          societyCode: new RegExp(`^${cleanUniqueId}$`, "i"),
-        });
-        if (society) {
-          userToLogin = await UserModel.findOne({ society: society._id });
-        }
-      }
-    }
-
-    // Priority 2: If no uniqueId provided, look up user by linked clerkId
-    if (!userToLogin && clerkUserId && !isDevUser) {
-      userToLogin = await UserModel.findOne({ clerkId: clerkUserId });
-    }
-
-    if (!userToLogin) {
-      if (!isDevUser) {
-        await clerkClient.users.deleteUser(clerkUserId).catch(() => {});
-      }
-      throw ApiError.notFound(`No user found with Unique ID or Society Code: ${uniqueId}`);
-    }
-
-    // Step 4: Check if already linked to a different Clerk account (skip for dev user).
-    if (userToLogin.clerkId && !isDevUser && userToLogin.clerkId !== clerkUserId) {
-      await clerkClient.users.deleteUser(clerkUserId).catch(() => {});
-      throw ApiError.conflict("This account is already linked to another Google account.");
-    }
-
-    // Step 5: Fetch Clerk user profile to verify email match (skip for dev user).
-    if (!isDevUser) {
-      const clerkProfile = await fetchClerkUser(clerkUserId);
-      if (clerkProfile.email.toLowerCase() !== userToLogin.email.toLowerCase()) {
-        await clerkClient.users.deleteUser(clerkUserId).catch(() => {});
-        throw ApiError.forbidden("Your email is not same as you provided at the time of registration.");
-      }
-    }
-
-    // Step 6: Check if user is blocked.
-    if (userToLogin.status === "blocked") {
-      if (!isDevUser) {
-        await clerkClient.users.deleteUser(clerkUserId).catch(() => {});
-      }
-      throw ApiError.forbidden("Your account has been blocked. Contact your society admin.");
-    }
-
-    // Link clerkId if not set
-    if (!userToLogin.clerkId) {
-      userToLogin.clerkId = isDevUser ? `dev_clerk_user_${userToLogin._id.toString()}` : clerkUserId;
-      userToLogin.isVerified = true;
-      await userToLogin.save();
-    }
-
-    const society = await SocietyModel.findById(userToLogin.society);
-
-    return { user: userToLogin, society };
+    return {
+      role: primaryRole,
+      permissions: Array.from(permissionSet),
+    };
   }
 
   /**
-   * Get the current authenticated user's profile.
+   * Complete login flow step.
+   * Checks MongoDB for user where clerkId == incoming clerkId.
+   * If found: returns full session (User, Society, Permissions, Role).
+   * If not found: returns { success: true, requiresSocietyCode: true }.
    */
-  async getMe(clerkUserId: string): Promise<LoginResult> {
+  async completeLogin(
+    clerkUserId: string,
+    _details?: {
+      email?: string;
+      firstName?: string;
+      lastName?: string;
+      imageUrl?: string;
+    }
+  ): Promise<CompleteLoginResult> {
+    const isDevUser = clerkUserId.startsWith("dev_");
+
+    const user = await UserModel.findOne({ clerkId: clerkUserId });
+
+    if (!user) {
+      // Unlinked Google account -> prompt for society code
+      return {
+        success: true,
+        requiresSocietyCode: true,
+      };
+    }
+
+    if (user.status === "blocked") {
+      throw ApiError.forbidden("Your account has been blocked. Contact your society admin.");
+    }
+
+    const society = await SocietyModel.findById(user.society);
+    const { role, permissions } = this.buildRoleAndPermissions(user);
+
+    return {
+      success: true,
+      requiresSocietyCode: false,
+      user,
+      society,
+      role,
+      permissions,
+    };
+  }
+
+  /**
+   * Link Google/Clerk Account with Society Code or Unique ID.
+   */
+  async linkAccount(
+    clerkUserId: string,
+    societyCode: string
+  ): Promise<AuthSuccessPayload> {
+    const cleanCode = societyCode.trim();
+
+    // 1. Try finding user by uniqueId (case-insensitive)
+    let userToLink = await UserModel.findOne({
+      uniqueId: new RegExp(`^${cleanCode}$`, "i"),
+    });
+
+    // 2. Fallback: If not found by uniqueId, try finding society by code and an unlinked user in it
+    if (!userToLink) {
+      const societyObj = await SocietyModel.findOne({
+        societyCode: new RegExp(`^${cleanCode}$`, "i"),
+      });
+      if (societyObj) {
+        userToLink = await UserModel.findOne({
+          society: societyObj._id,
+          $or: [{ clerkId: null }, { clerkId: "" }],
+        });
+      }
+    }
+
+    if (!userToLink) {
+      throw ApiError.notFound(`Invalid Society Code or Unique ID: "${societyCode}"`);
+    }
+
+    if (userToLink.status === "blocked") {
+      throw ApiError.forbidden("Your account has been blocked. Contact your society admin.");
+    }
+
+    const isDevUser = clerkUserId.startsWith("dev_");
+    if (userToLink.clerkId && !isDevUser && userToLink.clerkId !== clerkUserId) {
+      throw ApiError.conflict("This invitation code is already linked to another account.");
+    }
+
+    // Link clerkId to MongoDB user
+    userToLink.clerkId = isDevUser ? `dev_clerk_user_${userToLink._id.toString()}` : clerkUserId;
+    userToLink.isVerified = true;
+    await userToLink.save();
+
+    const society = await SocietyModel.findById(userToLink.society);
+    const { role, permissions } = this.buildRoleAndPermissions(userToLink);
+
+    return {
+      success: true,
+      requiresSocietyCode: false,
+      user: userToLink,
+      society,
+      role,
+      permissions,
+    };
+  }
+
+  /**
+   * Get the current authenticated user's session profile (GET /auth/me).
+   */
+  async getMe(clerkUserId: string): Promise<AuthSuccessPayload> {
     const user = await UserModel.findOne({ clerkId: clerkUserId });
 
     if (!user) {
       throw ApiError.notFound("No account linked to this Google account.");
     }
 
-    const society = await SocietyModel.findById(user.society);
+    if (user.status === "blocked") {
+      throw ApiError.forbidden("Your account has been blocked. Contact your society admin.");
+    }
 
-    return { user, society };
+    const society = await SocietyModel.findById(user.society);
+    const { role, permissions } = this.buildRoleAndPermissions(user);
+
+    return {
+      success: true,
+      requiresSocietyCode: false,
+      user,
+      society,
+      role,
+      permissions,
+    };
   }
 }
 
 export default new AuthService();
+

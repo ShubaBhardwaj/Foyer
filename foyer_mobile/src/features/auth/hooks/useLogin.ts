@@ -3,14 +3,11 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import * as Linking from "expo-linking";
 import Toast from "react-native-toast-message";
-import { societyRepository } from "@/repositories/society.repository";
 import { authRepository } from "@/repositories/auth.repository";
 import { useAuthStore } from "@/store/use-auth-store";
 import { queryKeys } from "@/lib/query-keys";
 import { getClerkModule } from "@/lib/clerk";
-import { ValidateSocietyCodeResponseDto } from "@/types/api/auth";
 
-// Safely invoke maybeCompleteAuthSession without top-level native module throw
 function safeMaybeCompleteAuthSession() {
   try {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -25,7 +22,6 @@ function safeMaybeCompleteAuthSession() {
 
 safeMaybeCompleteAuthSession();
 
-// Safely generate redirect URI for OAuth
 function getRedirectUri(): string {
   try {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -34,7 +30,7 @@ function getRedirectUri(): string {
       return AuthSession.makeRedirectUri();
     }
   } catch {
-    // Fallback to expo-linking URL if expo-auth-session is unlinked
+    // Fallback to expo-linking URL
   }
   return Linking.createURL("/oauth-native-callback");
 }
@@ -43,86 +39,35 @@ export function useLogin() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const setUserSession = useAuthStore((s) => s.setUserSession);
+  const storeRequiresSocietyCode = useAuthStore((s) => s.requiresSocietyCode);
+  const setRequiresSocietyCode = useAuthStore((s) => s.setRequiresSocietyCode);
 
   const clerk = getClerkModule();
   // eslint-disable-next-line react-hooks/rules-of-hooks
   const sso = clerk?.useSSO ? clerk.useSSO() : null;
   // eslint-disable-next-line react-hooks/rules-of-hooks
   const oauth = clerk?.useOAuth ? clerk.useOAuth({ strategy: "oauth_google" }) : null;
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const clerkUserResult = clerk?.useUser ? clerk.useUser() : { user: null };
+  const clerkUser = clerkUserResult.user;
 
-  const [societyCode, setSocietyCodeState] = useState("");
-  const [isValidatingCode, setIsValidatingCode] = useState(false);
-  const [validatedSociety, setValidatedSociety] = useState<ValidateSocietyCodeResponseDto | null>(null);
+  const [societyCode, setSocietyCode] = useState("");
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [isLinkingLoading, setIsLinkingLoading] = useState(false);
+  const [requiresSocietyCode, setLocalRequiresSocietyCode] = useState(false);
 
-  const handleValidateCode = useCallback(async (codeToValidate?: string) => {
-    const code = (codeToValidate || societyCode).trim();
-    if (!code || code.length < 6) {
-      Toast.show({
-        type: "error",
-        text1: "Invalid Code",
-        text2: "Please enter a valid 6-character society code.",
-      });
-      return;
-    }
+  const showSocietyCodeScreen = requiresSocietyCode || storeRequiresSocietyCode;
 
-    setIsValidatingCode(true);
-    try {
-      const result = await societyRepository.validateCode({ code });
-      if (result.valid) {
-        setValidatedSociety(result);
-        Toast.show({
-          type: "success",
-          text1: "Society Verified",
-          text2: `Joining ${result.societyName || "Society"}`,
-        });
-      } else {
-        setValidatedSociety(null);
-        Toast.show({
-          type: "error",
-          text1: "Invalid Society Code",
-          text2: result.message || "Please check your 6-character code and try again.",
-        });
-      }
-    } catch (err: unknown) {
-      setValidatedSociety(null);
-      const msg = err instanceof Error ? err.message : "Validation failed. Please check network connection.";
-      Toast.show({
-        type: "error",
-        text1: "Validation Error",
-        text2: msg,
-      });
-    } finally {
-      setIsValidatingCode(false);
-    }
-  }, [societyCode]);
-
-  const setSocietyCode = useCallback((code: string) => {
-    setSocietyCodeState(code);
-    if (validatedSociety) {
-      setValidatedSociety(null);
-    }
-    if (code.trim().length === 6) {
-      handleValidateCode(code);
-    }
-  }, [validatedSociety, handleValidateCode]);
-
+  /**
+   * Step 1 & 2: Tap "Continue with Google" -> Clerk Auth -> POST /auth/complete-login
+   */
   const handleGoogleSignIn = useCallback(async () => {
-    if (!validatedSociety || !validatedSociety.valid) {
-      Toast.show({
-        type: "error",
-        text1: "Validation Required",
-        text2: "Please enter and validate a valid 6-character society code first.",
-      });
-      return;
-    }
-
     setIsGoogleLoading(true);
     try {
-      let clerkUserId: string | null = null;
+      let activeClerkUserId: string | null = null;
       const redirectUrl = getRedirectUri();
 
-      // 1. Open Clerk Google OAuth browser window via useSSO (canonical v2.19+) or useOAuth fallback
+      // 1. Authenticate with Clerk Google OAuth
       if (sso && sso.startSSOFlow) {
         try {
           const { createdSessionId, setActive } = await sso.startSSOFlow({
@@ -132,10 +77,10 @@ export function useLogin() {
           });
           if (createdSessionId && setActive) {
             await setActive({ session: createdSessionId });
-            clerkUserId = createdSessionId;
+            activeClerkUserId = createdSessionId;
           }
         } catch (ssoErr) {
-          console.warn("[handleGoogleSignIn] Clerk SSO flow log:", ssoErr);
+          console.warn("[handleGoogleSignIn] SSO flow log:", ssoErr);
         }
       } else if (oauth && oauth.startOAuthFlow) {
         try {
@@ -145,71 +90,145 @@ export function useLogin() {
           });
           if (createdSessionId && setActive) {
             await setActive({ session: createdSessionId });
-            clerkUserId = createdSessionId;
+            activeClerkUserId = createdSessionId;
           }
         } catch (oauthErr) {
-          console.warn("[handleGoogleSignIn] Clerk OAuth browser flow log:", oauthErr);
+          console.warn("[handleGoogleSignIn] OAuth browser flow log:", oauthErr);
         }
       }
 
-      // 2. Perform backend completion & synchronization
-      const res = await authRepository.completeLogin({
-        uniqueId: societyCode,
-        societyCode: societyCode,
+      // 2. Call backend POST /auth/complete-login
+      const completeRes = await authRepository.completeLogin({
+        clerkId: activeClerkUserId || clerkUser?.id,
+        email: clerkUser?.primaryEmailAddress?.emailAddress,
+        firstName: clerkUser?.firstName || undefined,
+        lastName: clerkUser?.lastName || undefined,
+        imageUrl: clerkUser?.imageUrl,
       });
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const mongoUser = (res as any)?.user || (res as any)?.data?.user;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const societyObj = (res as any)?.society || (res as any)?.data?.society;
-
-      if (!mongoUser) {
-        throw new Error("Backend authentication failed. User object missing.");
+      // Case B: Requires society code link
+      if (completeRes.requiresSocietyCode) {
+        setLocalRequiresSocietyCode(true);
+        setRequiresSocietyCode(true);
+        Toast.show({
+          type: "info",
+          text1: "Society Code Required",
+          text2: "Please enter your society code to link your account.",
+        });
+        return;
       }
 
-      // 3. Update Zustand Store with Backend truth (MongoDB user)
-      setUserSession(mongoUser, societyObj, {
-        id: clerkUserId || mongoUser.clerkId || "user_id",
-        email: mongoUser.email,
-        fullName: mongoUser.name,
-      });
+      // Case A: User exists -> immediate login
+      if (completeRes.user && completeRes.user._id) {
+        setUserSession(
+          completeRes.user,
+          completeRes.society,
+          {
+            id: activeClerkUserId || clerkUser?.id || completeRes.user.clerkId || "user_id",
+            email: clerkUser?.primaryEmailAddress?.emailAddress || completeRes.user.email,
+            fullName: clerkUser?.fullName || completeRes.user.name,
+            imageUrl: clerkUser?.imageUrl,
+          },
+          completeRes.role,
+          completeRes.permissions
+        );
 
-      // 4. Prefetch essential cache data for instant dashboard load
-      queryClient.prefetchQuery({
-        queryKey: queryKeys.auth.me(),
-        queryFn: () => authRepository.getMe(),
-      }).catch(() => {});
+        queryClient.prefetchQuery({
+          queryKey: queryKeys.auth.me(),
+          queryFn: () => authRepository.getMe(),
+        }).catch(() => {});
 
-      Toast.show({
-        type: "success",
-        text1: "Welcome to Foyer",
-        text2: `Signed in as ${mongoUser.name}`,
-      });
+        Toast.show({
+          type: "success",
+          text1: "Welcome to Foyer",
+          text2: `Signed in as ${completeRes.user.name}`,
+        });
 
-      // 5. Navigate to app dashboard
-      router.replace("/(app)/(tabs)/(home)");
+        router.replace("/(app)/(tabs)/(home)");
+      }
     } catch (err: unknown) {
-      console.error("[handleGoogleSignIn] Sign In Error:", err);
+      console.error("[handleGoogleSignIn] Error:", err);
       const msg = err instanceof Error ? err.message : "Authentication failed. Please try again.";
       Toast.show({
         type: "error",
         text1: "Sign In Error",
-        text2: msg.includes("invitation")
-          ? "This Google account is not associated with your invitation. Please sign in using the invited Google account."
-          : msg,
+        text2: msg,
       });
     } finally {
       setIsGoogleLoading(false);
     }
-  }, [sso, oauth, validatedSociety, societyCode, setUserSession, queryClient, router]);
+  }, [sso, oauth, clerkUser, setUserSession, setRequiresSocietyCode, queryClient, router]);
+
+  /**
+   * Step 4 & 5: Account Linking -> POST /auth/link-account
+   */
+  const handleLinkAccount = useCallback(async () => {
+    const code = societyCode.trim();
+    if (!code) {
+      Toast.show({
+        type: "error",
+        text1: "Society Code Required",
+        text2: "Please enter your society code.",
+      });
+      return;
+    }
+
+    setIsLinkingLoading(true);
+    try {
+      const linkRes = await authRepository.linkAccount({
+        societyCode: code,
+      });
+
+      if (!linkRes.user || !linkRes.user._id) {
+        throw new Error("Failed to link account.");
+      }
+
+      setUserSession(
+        linkRes.user,
+        linkRes.society,
+        clerkUser
+          ? {
+              id: clerkUser.id,
+              email: clerkUser.primaryEmailAddress?.emailAddress,
+              fullName: clerkUser.fullName || undefined,
+              imageUrl: clerkUser.imageUrl,
+            }
+          : null,
+        linkRes.role,
+        linkRes.permissions
+      );
+
+      setLocalRequiresSocietyCode(false);
+      setRequiresSocietyCode(false);
+
+      Toast.show({
+        type: "success",
+        text1: "Account Linked Successfully",
+        text2: `Welcome to ${linkRes.society?.name || "your society"}`,
+      });
+
+      router.replace("/(app)/(tabs)/(home)");
+    } catch (err: unknown) {
+      console.error("[handleLinkAccount] Error:", err);
+      const msg = err instanceof Error ? err.message : "Account linking failed. Please check society code.";
+      Toast.show({
+        type: "error",
+        text1: "Linking Error",
+        text2: msg,
+      });
+    } finally {
+      setIsLinkingLoading(false);
+    }
+  }, [societyCode, clerkUser, setUserSession, setRequiresSocietyCode, router]);
 
   return {
     societyCode,
     setSocietyCode,
-    isValidatingCode,
-    validatedSociety,
+    showSocietyCodeScreen,
     isGoogleLoading,
-    handleValidateCode,
+    isLinkingLoading,
     handleGoogleSignIn,
+    handleLinkAccount,
   };
 }
+

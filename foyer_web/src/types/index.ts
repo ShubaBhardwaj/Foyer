@@ -54,8 +54,11 @@ export interface Flat {
 }
 
 export interface AuthMeResponse {
-  user: User;
-  society: Society | null;
+  requiresSocietyCode?: boolean;
+  user?: User;
+  society?: Society | null;
+  role?: Role;
+  permissions?: string[];
 }
 
 export interface StructureResponse {
@@ -74,8 +77,18 @@ export interface ApiResponse<T = unknown> {
 
 // Request Payload Types
 export interface CompleteLoginPayload {
-  uniqueId?: string;
+  clerkId?: string;
+  email?: string;
+  firstName?: string;
+  lastName?: string;
+  imageUrl?: string;
 }
+
+export interface LinkAccountPayload {
+  clerkId?: string;
+  societyCode: string;
+}
+
 
 export interface RegisterSocietyPayload {
   name: string;

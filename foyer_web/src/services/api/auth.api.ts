@@ -1,9 +1,14 @@
 import { axiosClient } from "./axiosClient";
-import { ApiResponse, AuthMeResponse, CompleteLoginPayload } from "@/types";
+import { ApiResponse, AuthMeResponse, CompleteLoginPayload, LinkAccountPayload } from "@/types";
 
 export const authApi = {
   completeLogin: async (payload?: CompleteLoginPayload): Promise<ApiResponse<AuthMeResponse>> => {
     const response = await axiosClient.post<ApiResponse<AuthMeResponse>>("/auth/complete-login", payload || {});
+    return response.data;
+  },
+
+  linkAccount: async (payload: LinkAccountPayload): Promise<ApiResponse<AuthMeResponse>> => {
+    const response = await axiosClient.post<ApiResponse<AuthMeResponse>>("/auth/link-account", payload);
     return response.data;
   },
 
@@ -12,3 +17,4 @@ export const authApi = {
     return response.data;
   },
 };
+
