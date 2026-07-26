@@ -4,17 +4,20 @@ import { GetDashboardResponseDto } from "@/types/api/dashboard";
 export const dashboardApi = {
   async getResidentDashboard(): Promise<unknown> {
     const res = await apiClient.get("/dashboard/resident");
-    return res.data;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (res.data as any)?.data !== undefined ? (res.data as any).data : res.data;
   },
 
   async getGuardDashboard(): Promise<unknown> {
     const res = await apiClient.get("/dashboard/guard");
-    return res.data;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (res.data as any)?.data !== undefined ? (res.data as any).data : res.data;
   },
 
   async getAdminDashboard(): Promise<unknown> {
     const res = await apiClient.get("/dashboard/admin");
-    return res.data;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (res.data as any)?.data !== undefined ? (res.data as any).data : res.data;
   },
 
   async getDashboard(role?: string): Promise<GetDashboardResponseDto> {
@@ -29,10 +32,12 @@ export const dashboardApi = {
 
     try {
       const res = await apiClient.get(endpoint);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const responseData = (res.data as any)?.data !== undefined ? (res.data as any).data : res.data;
       return {
         success: true,
         role: (role as GetDashboardResponseDto["role"]) || "RESIDENT",
-        metrics: res.data?.data || res.data || {},
+        metrics: responseData || {},
       };
     } catch {
       return {
@@ -44,3 +49,4 @@ export const dashboardApi = {
     }
   },
 };
+

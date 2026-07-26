@@ -27,7 +27,9 @@ export const uploadApi = {
       },
     });
 
-    return res.data;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const responseData = (res.data as any)?.data !== undefined ? (res.data as any).data : res.data;
+    return responseData;
   },
 
   async uploadDocument(
@@ -55,6 +57,9 @@ export const uploadApi = {
       },
     });
 
-    return res.data;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const responseData = (res.data as any)?.data !== undefined ? (res.data as any).data : res.data;
+    return responseData;
   },
 };
+

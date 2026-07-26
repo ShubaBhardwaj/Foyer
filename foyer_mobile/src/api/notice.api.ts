@@ -14,16 +14,36 @@ export const noticeApi = {
     search?: string;
   }): Promise<NoticeListResponseDto> {
     const res = await apiClient.get<NoticeListResponseDto>("/notices", { params });
-    return res.data;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const responseData = (res.data as any)?.data !== undefined ? (res.data as any).data : res.data;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const metaData = (res.data as any)?.meta || (res.data as any)?.pagination;
+    const list = Array.isArray(responseData) ? responseData : [];
+    return {
+      success: true,
+      data: list,
+      pagination: metaData || { page: 1, limit: 10, total: list.length, pages: 1 },
+    };
   },
 
   async getNoticeById(id: string): Promise<NoticeDetailResponseDto> {
     const res = await apiClient.get<NoticeDetailResponseDto>(`/notices/${id}`);
-    return res.data;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const responseData = (res.data as any)?.data !== undefined ? (res.data as any).data : res.data;
+    return {
+      success: true,
+      data: responseData,
+    };
   },
 
   async createNotice(dto: CreateNoticeRequestDto): Promise<NoticeDetailResponseDto> {
     const res = await apiClient.post<NoticeDetailResponseDto>("/notices", dto);
-    return res.data;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const responseData = (res.data as any)?.data !== undefined ? (res.data as any).data : res.data;
+    return {
+      success: true,
+      data: responseData,
+    };
   },
 };
+

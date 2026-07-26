@@ -48,10 +48,24 @@ export function normalizeApiError(error: unknown): ApiError {
       };
     }
 
-    // Extract server message and code
-    const serverMessage = typeof data?.message === "string" ? data.message : undefined;
-    const serverCode = typeof data?.code === "string" ? data.code : undefined;
-    const details = typeof data?.details === "object" && data.details !== null ? (data.details as Record<string, unknown>) : undefined;
+    // Extract server message and code from both direct data and backend error object envelope
+    const rawErrorObj = (data as any)?.error;
+    const serverMessage = typeof data?.message === "string" 
+      ? data.message 
+      : typeof rawErrorObj?.message === "string" 
+        ? rawErrorObj.message 
+        : undefined;
+    const serverCode = typeof data?.code === "string" 
+      ? data.code 
+      : typeof rawErrorObj?.code === "string" 
+        ? rawErrorObj.code 
+        : undefined;
+    const details = typeof data?.details === "object" && data.details !== null 
+      ? (data.details as Record<string, unknown>) 
+      : typeof rawErrorObj?.details === "object" && rawErrorObj?.details !== null
+        ? (rawErrorObj.details as Record<string, unknown>)
+        : undefined;
+
 
     switch (status) {
       case 401:
