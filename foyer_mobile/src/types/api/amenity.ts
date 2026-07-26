@@ -27,6 +27,12 @@ export interface AmenityDto {
 export interface AmenityListResponseDto {
   success: boolean;
   data: AmenityDto[];
+  pagination?: {
+    page: number;
+    limit: number;
+    total: number;
+    pages: number;
+  };
 }
 
 export interface AmenityDetailResponseDto {
@@ -36,6 +42,8 @@ export interface AmenityDetailResponseDto {
 
 export interface AmenitySlotsResponseDto {
   success: boolean;
-  date: string;
-  slots: AmenitySlotDto[];
+  date?: string;
+  data?: AmenitySlotDto[];
+  slots?: AmenitySlotDto[];
 }
+

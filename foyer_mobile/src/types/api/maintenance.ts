@@ -30,17 +30,26 @@ export interface InitiatePaymentRequestDto {
 
 export interface InitiatePaymentResponseDto {
   success: boolean;
-  transactionId: string;
+  transactionId?: string;
   paymentUrl?: string;
-  status: "SUCCESS" | "PENDING" | "FAILED";
+  status?: "SUCCESS" | "PENDING" | "FAILED";
+  data?: any;
 }
+
 
 export interface InvoiceListResponseDto {
   success: boolean;
   data: InvoiceDto[];
+  pagination?: {
+    page: number;
+    limit: number;
+    total: number;
+    pages: number;
+  };
 }
 
 export interface InvoiceDetailResponseDto {
   success: boolean;
   data: InvoiceDto;
 }
+

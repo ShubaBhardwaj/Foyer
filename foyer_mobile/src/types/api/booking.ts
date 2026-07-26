@@ -30,9 +30,16 @@ export interface CancelBookingRequestDto {
 export interface BookingListResponseDto {
   success: boolean;
   data: BookingDto[];
+  pagination?: {
+    page: number;
+    limit: number;
+    total: number;
+    pages: number;
+  };
 }
 
 export interface BookingDetailResponseDto {
   success: boolean;
   data: BookingDto;
 }
+

@@ -37,9 +37,16 @@ export interface VotePollRequestDto {
 export interface PollListResponseDto {
   success: boolean;
   data: PollDto[];
+  pagination?: {
+    page: number;
+    limit: number;
+    total: number;
+    pages: number;
+  };
 }
 
 export interface PollDetailResponseDto {
   success: boolean;
   data: PollDto;
 }
+
