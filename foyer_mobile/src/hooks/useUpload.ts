@@ -47,7 +47,7 @@ export function useUpload() {
           const fileName = asset.fileName || `upload_${Date.now()}_${i}.jpg`;
           const mimeType = asset.mimeType || "image/jpeg";
 
-          const response = await uploadApi.uploadFile(asset.uri, fileName, mimeType, (fileProgress) => {
+          const response = await uploadApi.uploadImage(asset.uri, fileName, mimeType, (fileProgress: number) => {
             const currentTotalProgress = Math.round((i * 100 + fileProgress) / totalFiles);
             setProgress(currentTotalProgress);
           });
@@ -96,7 +96,7 @@ export function useUpload() {
         const fileName = asset.fileName || `photo_${Date.now()}.jpg`;
         const mimeType = asset.mimeType || "image/jpeg";
 
-        const response = await uploadApi.uploadFile(asset.uri, fileName, mimeType, (percent) => {
+        const response = await uploadApi.uploadImage(asset.uri, fileName, mimeType, (percent: number) => {
           setProgress(percent);
         });
 
