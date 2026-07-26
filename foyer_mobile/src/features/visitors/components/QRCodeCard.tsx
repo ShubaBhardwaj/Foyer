@@ -1,8 +1,9 @@
 import React from "react";
 import { View, StyleSheet } from "react-native";
+import QRCode from "react-native-qrcode-svg";
 import { AppCard, Title, Body, Caption, AppStatusPill } from "@/components/ui";
 import { useAppTheme, spacing, radius } from "@/theme";
-import { QrCode, ShieldCheck } from "lucide-react-native";
+import { ShieldCheck } from "lucide-react-native";
 
 interface QRCodeCardProps {
   visitorName: string;
@@ -33,19 +34,14 @@ export const QRCodeCard = React.memo(function QRCodeCard({
         </View>
       </View>
 
-      {/* ─── QR Code Placeholder Frame ─────────────────────────────────── */}
-      <View style={[styles.qrFrame, { borderColor: theme.colors.outline, backgroundColor: theme.colors.surfaceVariant ?? "#F5F0E8" }]}>
-        {/* TODO: Generate QR code using backend data & react-native-qrcode-svg */}
-        <QrCode size={140} color={theme.colors.primary} />
-        <Caption style={{ color: theme.colors.outline, marginTop: spacing.sm }}>
-          ---------------------------------------
-        </Caption>
-        <Caption style={{ color: theme.colors.onSurfaceVariant, fontWeight: "600" }}>
-          QR CODE PLACEHOLDER
-        </Caption>
-        <Caption style={{ color: theme.colors.outline }}>
-          ---------------------------------------
-        </Caption>
+      {/* ─── Local QR Code Frame ─────────────────────────────────────────── */}
+      <View style={[styles.qrFrame, { borderColor: theme.colors.primary, backgroundColor: "#FFFFFF" }]}>
+        <QRCode
+          value={visitorIdCode || "FYR-VIS"}
+          size={160}
+          color={theme.colors.primary}
+          backgroundColor="#FFFFFF"
+        />
       </View>
 
       <View style={styles.footer}>

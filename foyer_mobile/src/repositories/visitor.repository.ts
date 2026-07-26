@@ -1,9 +1,7 @@
 import { visitorApi } from "@/api/visitor.api";
 import {
   CreateVisitorRequestDto,
-  UpdateVisitorStatusRequestDto,
   VisitorDto,
-  VisitorStatus,
 } from "@/types/api/visitor";
 
 export const visitorRepository = {
@@ -25,13 +23,29 @@ export const visitorRepository = {
     return res.data;
   },
 
-  async updateStatus(id: string, status: VisitorStatus, reason?: string): Promise<VisitorDto> {
-    const dto: UpdateVisitorStatusRequestDto = { status, reason };
-    const res = await visitorApi.updateVisitorStatus(id, dto);
+  async approveVisitor(id: string, statusRemark?: string): Promise<VisitorDto> {
+    const res = await visitorApi.approveVisitor(id, { statusRemark });
     return res.data;
   },
 
-  async fetchQrPass(id: string) {
-    return await visitorApi.getVisitorQrCode(id);
+  async rejectVisitor(id: string, statusRemark: string): Promise<VisitorDto> {
+    const res = await visitorApi.rejectVisitor(id, { statusRemark });
+    return res.data;
+  },
+
+  async cancelVisitor(id: string, statusRemark?: string): Promise<VisitorDto> {
+    const res = await visitorApi.cancelVisitor(id, { statusRemark });
+    return res.data;
+  },
+
+  async checkInVisitor(id: string, entryCode?: string): Promise<VisitorDto> {
+    const res = await visitorApi.checkInVisitor(id, { entryCode });
+    return res.data;
+  },
+
+  async checkOutVisitor(id: string): Promise<VisitorDto> {
+    const res = await visitorApi.checkOutVisitor(id);
+    return res.data;
   },
 };
+

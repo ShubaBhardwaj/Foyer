@@ -1,7 +1,6 @@
 import { complaintApi } from "@/api/complaint.api";
 import {
   ComplaintDto,
-  ComplaintStatus,
   CreateComplaintRequestDto,
 } from "@/types/api/complaint";
 
@@ -24,13 +23,9 @@ export const complaintRepository = {
     return res.data;
   },
 
-  async updateStatus(id: string, status: ComplaintStatus, note?: string): Promise<ComplaintDto> {
-    const res = await complaintApi.updateComplaintStatus(id, { status, note });
-    return res.data;
-  },
-
-  async addComment(id: string, text: string): Promise<ComplaintDto> {
-    const res = await complaintApi.addComplaintComment(id, { text });
+  async resolveComplaint(id: string, resolutionNotes?: string): Promise<ComplaintDto> {
+    const res = await complaintApi.resolveComplaint(id, { resolutionNotes });
     return res.data;
   },
 };
+

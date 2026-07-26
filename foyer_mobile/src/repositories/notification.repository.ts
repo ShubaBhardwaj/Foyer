@@ -1,8 +1,7 @@
 import { notificationApi } from "@/api/notification.api";
-import { NotificationDto } from "@/types/api/notification";
 
 export const notificationRepository = {
-  async fetchNotificationsList(filters?: { page?: number; limit?: number }) {
+  async fetchNotificationsList(filters?: { page?: number; limit?: number; unreadOnly?: boolean | string }) {
     const res = await notificationApi.listNotifications(filters);
     return {
       notifications: res.data || [],
@@ -12,8 +11,8 @@ export const notificationRepository = {
   },
 
   async fetchUnreadCount(): Promise<number> {
-    const res = await notificationApi.getUnreadCount();
-    return res.unreadCount || 0;
+    const res = await notificationApi.listNotifications({ unreadOnly: "true" });
+    return res.unreadCount ?? (Array.isArray(res.data) ? res.data.length : 0);
   },
 
   async markRead(id: string): Promise<boolean> {
@@ -31,3 +30,4 @@ export const notificationRepository = {
     return res.success;
   },
 };
+

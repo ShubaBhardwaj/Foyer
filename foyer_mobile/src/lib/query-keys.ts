@@ -21,7 +21,6 @@ export const queryKeys = {
     all: ["visitors"] as const,
     list: (filters?: Record<string, unknown>) => ["visitors", "list", filters ?? {}] as const,
     detail: (id: string) => ["visitors", "detail", id] as const,
-    qr: (id: string) => ["visitors", "qr", id] as const,
     preApproved: () => ["visitors", "preApproved"] as const,
   },
 

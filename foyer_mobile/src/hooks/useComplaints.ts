@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
 import { complaintRepository } from "@/repositories/complaint.repository";
-import { ComplaintStatus, CreateComplaintRequestDto } from "@/types/api/complaint";
+import { CreateComplaintRequestDto } from "@/types/api/complaint";
 
 export function useComplaints() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -36,11 +36,12 @@ export function useComplaints() {
     },
   });
 
-  const updateStatusMutation = useMutation({
-    mutationFn: ({ id, status, note }: { id: string; status: ComplaintStatus; note?: string }) =>
-      complaintRepository.updateStatus(id, status, note),
+  const resolveComplaintMutation = useMutation({
+    mutationFn: ({ id, resolutionNotes }: { id: string; resolutionNotes?: string }) =>
+      complaintRepository.resolveComplaint(id, resolutionNotes),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.complaints.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.all });
     },
   });
 
@@ -58,8 +59,9 @@ export function useComplaints() {
     refetch,
     createComplaint: (dto: CreateComplaintRequestDto) => createComplaintMutation.mutateAsync(dto),
     isSubmitting: createComplaintMutation.isPending,
-    updateStatus: (id: string, status: ComplaintStatus, note?: string) =>
-      updateStatusMutation.mutateAsync({ id, status, note }),
+    resolveComplaint: (id: string, resolutionNotes?: string) =>
+      resolveComplaintMutation.mutateAsync({ id, resolutionNotes }),
+    isResolving: resolveComplaintMutation.isPending,
   };
 }
 
@@ -78,10 +80,12 @@ export function useComplaintDetails(complaintId: string) {
     enabled: !!complaintId,
   });
 
-  const addCommentMutation = useMutation({
-    mutationFn: (text: string) => complaintRepository.addComment(complaintId, text),
+  const resolveComplaintMutation = useMutation({
+    mutationFn: (resolutionNotes?: string) => complaintRepository.resolveComplaint(complaintId, resolutionNotes),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.complaints.detail(complaintId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.complaints.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.all });
     },
   });
 
@@ -91,7 +95,8 @@ export function useComplaintDetails(complaintId: string) {
     isError,
     error,
     refetch,
-    addComment: (text: string) => addCommentMutation.mutateAsync(text),
-    isCommenting: addCommentMutation.isPending,
+    resolveComplaint: (resolutionNotes?: string) => resolveComplaintMutation.mutateAsync(resolutionNotes),
+    isResolving: resolveComplaintMutation.isPending,
   };
 }
+

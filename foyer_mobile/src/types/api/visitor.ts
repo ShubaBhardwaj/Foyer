@@ -1,18 +1,33 @@
-export type VisitorStatus = "PENDING" | "APPROVED" | "REJECTED" | "CHECKED_IN" | "CHECKED_OUT" | "EXPIRED";
+export type VisitorStatus =
+  | "PENDING"
+  | "APPROVED"
+  | "REJECTED"
+  | "CANCELLED"
+  | "CHECKED_IN"
+  | "CHECKED_OUT"
+  | "EXPIRED";
 
 export interface VisitorDto {
   _id: string;
-  name: string;
-  phone: string;
-  purpose: string;
+  fullName?: string;
+  name?: string;
+  phoneNumber?: string;
+  phone?: string;
+  purpose?: string;
   vehicleNumber?: string;
-  entryType: "GUEST" | "DELIVERY" | "CAB" | "SERVICE";
+  visitorType?: "GUEST" | "DELIVERY" | "CAB" | "SERVICE";
+  entryType?: "GUEST" | "DELIVERY" | "CAB" | "SERVICE";
   status: VisitorStatus;
-  hostUser: string | { _id: string; name: string; flatNumber?: string; tower?: string };
+  statusRemark?: string;
+  hostUser?: string | { _id: string; name: string; flatNumber?: string; tower?: string };
+  resident?: string | { _id: string; name: string; flatNumber?: string; tower?: string };
+  expectedArrival?: string;
+  expectedDeparture?: string;
   expectedDate?: string;
   expectedTime?: string;
   checkInTime?: string;
   checkOutTime?: string;
+  entryCode?: string;
   passCode?: string;
   qrCodeUrl?: string;
   createdAt: string;
@@ -20,19 +35,39 @@ export interface VisitorDto {
 }
 
 export interface CreateVisitorRequestDto {
-  name: string;
-  phone: string;
-  purpose: string;
+  fullName: string;
+  phoneNumber: string;
+  email?: string;
+  photoUrl?: string;
+  visitorType: "GUEST" | "DELIVERY" | "CAB" | "SERVICE";
+  purpose?: string;
+  notes?: string;
   vehicleNumber?: string;
-  entryType?: "GUEST" | "DELIVERY" | "CAB" | "SERVICE";
-  expectedDate?: string;
-  expectedTime?: string;
+  expectedArrival: string;
+  expectedDeparture?: string;
+  society: string;
+  tower: string;
+  flat: string;
+  resident: string;
 }
 
-export interface UpdateVisitorStatusRequestDto {
-  status: VisitorStatus;
-  reason?: string;
+export interface ApproveVisitorRequestDto {
+  statusRemark?: string;
 }
+
+export interface RejectVisitorRequestDto {
+  statusRemark: string;
+}
+
+export interface CancelVisitorRequestDto {
+  statusRemark?: string;
+}
+
+export interface CheckInVisitorRequestDto {
+  entryCode?: string;
+}
+
+export interface CheckOutVisitorRequestDto {}
 
 export interface VisitorListResponseDto {
   success: boolean;
@@ -49,3 +84,4 @@ export interface VisitorDetailResponseDto {
   success: boolean;
   data: VisitorDto;
 }
+

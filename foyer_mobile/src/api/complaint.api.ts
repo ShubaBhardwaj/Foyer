@@ -1,10 +1,9 @@
 import apiClient from "./axios";
 import {
-  AddComplaintCommentRequestDto,
   ComplaintDetailResponseDto,
   ComplaintListResponseDto,
   CreateComplaintRequestDto,
-  UpdateComplaintStatusRequestDto,
+  ResolveComplaintRequestDto,
 } from "@/types/api/complaint";
 
 export const complaintApi = {
@@ -17,26 +16,45 @@ export const complaintApi = {
     search?: string;
   }): Promise<ComplaintListResponseDto> {
     const res = await apiClient.get<ComplaintListResponseDto>("/complaints", { params });
-    return res.data;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const responseData = (res.data as any)?.data !== undefined ? (res.data as any).data : res.data;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const paginationData = (res.data as any)?.meta || (res.data as any)?.pagination;
+    return {
+      success: true,
+      data: Array.isArray(responseData) ? responseData : [],
+      pagination: paginationData || { page: 1, limit: 10, total: 0, pages: 1 },
+    };
   },
 
   async getComplaintById(id: string): Promise<ComplaintDetailResponseDto> {
     const res = await apiClient.get<ComplaintDetailResponseDto>(`/complaints/${id}`);
-    return res.data;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const responseData = (res.data as any)?.data !== undefined ? (res.data as any).data : res.data;
+    return {
+      success: true,
+      data: responseData,
+    };
   },
 
   async createComplaint(dto: CreateComplaintRequestDto): Promise<ComplaintDetailResponseDto> {
     const res = await apiClient.post<ComplaintDetailResponseDto>("/complaints", dto);
-    return res.data;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const responseData = (res.data as any)?.data !== undefined ? (res.data as any).data : res.data;
+    return {
+      success: true,
+      data: responseData,
+    };
   },
 
-  async updateComplaintStatus(id: string, dto: UpdateComplaintStatusRequestDto): Promise<ComplaintDetailResponseDto> {
-    const res = await apiClient.patch<ComplaintDetailResponseDto>(`/complaints/${id}/status`, dto);
-    return res.data;
-  },
-
-  async addComplaintComment(id: string, dto: AddComplaintCommentRequestDto): Promise<ComplaintDetailResponseDto> {
-    const res = await apiClient.post<ComplaintDetailResponseDto>(`/complaints/${id}/comments`, dto);
-    return res.data;
+  async resolveComplaint(id: string, dto?: ResolveComplaintRequestDto): Promise<ComplaintDetailResponseDto> {
+    const res = await apiClient.post<ComplaintDetailResponseDto>(`/complaints/${id}/resolve`, dto || {});
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const responseData = (res.data as any)?.data !== undefined ? (res.data as any).data : res.data;
+    return {
+      success: true,
+      data: responseData,
+    };
   },
 };
+

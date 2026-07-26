@@ -2,7 +2,6 @@ import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
 import { visitorRepository } from "@/repositories/visitor.repository";
-import { VisitorStatus } from "@/types/api/visitor";
 
 export function useVisitors() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -74,9 +73,44 @@ export function useVisitors() {
 
   const filters = ["All", "Pending", "Approved", "Rejected", "Today's", "Pre Approved"];
 
-  const updateStatusMutation = useMutation({
-    mutationFn: ({ id, status, reason }: { id: string; status: VisitorStatus; reason?: string }) =>
-      visitorRepository.updateStatus(id, status, reason),
+  const approveMutation = useMutation({
+    mutationFn: ({ id, statusRemark }: { id: string; statusRemark?: string }) =>
+      visitorRepository.approveVisitor(id, statusRemark),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.visitors.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.all });
+    },
+  });
+
+  const rejectMutation = useMutation({
+    mutationFn: ({ id, statusRemark }: { id: string; statusRemark: string }) =>
+      visitorRepository.rejectVisitor(id, statusRemark),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.visitors.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.all });
+    },
+  });
+
+  const cancelMutation = useMutation({
+    mutationFn: ({ id, statusRemark }: { id: string; statusRemark?: string }) =>
+      visitorRepository.cancelVisitor(id, statusRemark),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.visitors.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.all });
+    },
+  });
+
+  const checkInMutation = useMutation({
+    mutationFn: ({ id, entryCode }: { id: string; entryCode?: string }) =>
+      visitorRepository.checkInVisitor(id, entryCode),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.visitors.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.all });
+    },
+  });
+
+  const checkOutMutation = useMutation({
+    mutationFn: (id: string) => visitorRepository.checkOutVisitor(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.visitors.all });
       queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.all });
@@ -87,6 +121,7 @@ export function useVisitors() {
     mutationFn: (dto: any) => visitorRepository.createVisitorPass(dto),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.visitors.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.all });
     },
   });
 
@@ -105,11 +140,17 @@ export function useVisitors() {
     isError,
     error,
     refetch,
-    handleApproveVisitor: (id: string) => updateStatusMutation.mutate({ id, status: "APPROVED" }),
-    handleRejectVisitor: (id: string, reason?: string) => updateStatusMutation.mutate({ id, status: "REJECTED", reason }),
-    handleCheckInVisitor: (id: string) => updateStatusMutation.mutate({ id, status: "CHECKED_IN" }),
-    handleCheckOutVisitor: (id: string) => updateStatusMutation.mutate({ id, status: "CHECKED_OUT" }),
+    handleApproveVisitor: (id: string, statusRemark?: string) => approveMutation.mutate({ id, statusRemark }),
+    handleRejectVisitor: (id: string, statusRemark: string = "Request rejected") => rejectMutation.mutate({ id, statusRemark }),
+    handleCancelVisitor: (id: string, statusRemark?: string) => cancelMutation.mutate({ id, statusRemark }),
+    handleCheckInVisitor: (id: string, entryCode?: string) => checkInMutation.mutate({ id, entryCode }),
+    handleCheckOutVisitor: (id: string) => checkOutMutation.mutate(id),
     createVisitor: (dto: any) => createVisitorMutation.mutateAsync(dto),
-    isUpdating: updateStatusMutation.isPending,
+    isUpdating:
+      approveMutation.isPending ||
+      rejectMutation.isPending ||
+      cancelMutation.isPending ||
+      checkInMutation.isPending ||
+      checkOutMutation.isPending,
   };
 }
