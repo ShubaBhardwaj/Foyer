@@ -1,19 +1,16 @@
 import React from "react";
 import { View, ActivityIndicator, StyleSheet } from "react-native";
-import { Stack, Redirect } from "expo-router";
+import { Stack } from "expo-router";
 import { useAuthInitializer } from "@/hooks/useAuthInitializer";
 import { useAuthStore } from "@/store/use-auth-store";
 import { colors } from "@/theme";
-
-export const unstable_settings = {
-  initialRouteName: "(tabs)",
-};
 
 export default function AppLayout() {
   useAuthInitializer();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const isInitialized = useAuthStore((s) => s.isInitialized);
 
+  // 1. Splash loading screen while backend verifies session
   if (!isInitialized) {
     return (
       <View style={styles.splashContainer}>
@@ -22,10 +19,14 @@ export default function AppLayout() {
     );
   }
 
+  // 2. Conditionally render ONLY auth stack or tabs stack to guarantee route isolation
   return (
     <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="(tabs)" redirect={!isAuthenticated} />
-      <Stack.Screen name="(auth)" redirect={isAuthenticated} />
+      {!isAuthenticated ? (
+        <Stack.Screen name="(auth)" />
+      ) : (
+        <Stack.Screen name="(tabs)" />
+      )}
     </Stack>
   );
 }

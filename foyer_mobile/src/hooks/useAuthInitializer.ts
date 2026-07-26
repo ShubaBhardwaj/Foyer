@@ -1,7 +1,8 @@
 import { useEffect } from "react";
-import { setAuthTokenProvider } from "@/api/axios";
+import { setAuthTokenProvider, setUnauthenticatedHandler } from "@/api/axios";
 import { authRepository } from "@/repositories/auth.repository";
 import { useAuthStore } from "@/store/use-auth-store";
+import { queryClient } from "@/lib/query-client";
 import { getClerkModule } from "@/lib/clerk";
 
 export function useAuthInitializer() {
@@ -24,11 +25,31 @@ export function useAuthInitializer() {
   const { getToken, isSignedIn, isLoaded: isClerkLoaded } = clerkAuth;
   const clerkUser = clerkUserResult.user;
 
+  // Helper for full session cleanup on failure or 401
+  const performFullLogout = async () => {
+    try {
+      if (clerk && clerk.useClerk) {
+        const { signOut } = clerk.useClerk();
+        if (signOut) await signOut();
+      }
+    } catch {
+      // Clerk unavailable or signOut failed
+    }
+    queryClient.clear();
+    logoutStore();
+    setInitialized(true);
+  };
+
   useEffect(() => {
     // Inject token provider into Axios client
     setAuthTokenProvider(async () => {
       if (!isSignedIn) return null;
       return await getToken();
+    });
+
+    // Register 401 unauthenticated handler
+    setUnauthenticatedHandler(() => {
+      performFullLogout();
     });
   }, [getToken, isSignedIn]);
 
@@ -38,11 +59,20 @@ export function useAuthInitializer() {
     let isMounted = true;
 
     async function syncBackendSession() {
+      // If no Clerk session exists, clear backend session and finish initialization
+      if (!isSignedIn) {
+        if (isMounted) {
+          logoutStore();
+          setInitialized(true);
+        }
+        return;
+      }
+
       try {
-        // Attempt session restore with backend /auth/me
+        // Step 1: Call GET /auth/me to verify existing session with backend truth
         const meRes = await authRepository.getMe();
 
-        if (meRes && meRes.user && isMounted) {
+        if (meRes && meRes.user && meRes.user._id && isMounted) {
           setUserSession(
             meRes.user,
             meRes.society,
@@ -59,28 +89,36 @@ export function useAuthInitializer() {
           return;
         }
 
-        // If no user found from GET /auth/me and signed in on Clerk, complete login
-        if (isSignedIn && clerkUser) {
-          const completeRes = await authRepository.completeLogin({});
-          if (completeRes && completeRes.user && isMounted) {
-            setUserSession(completeRes.user, completeRes.society, {
-              id: clerkUser.id,
-              email: clerkUser.primaryEmailAddress?.emailAddress,
-              fullName: clerkUser.fullName || undefined,
-              imageUrl: clerkUser.imageUrl,
-            });
-            setInitialized(true);
-            return;
-          }
+        // Step 2: If GET /auth/me returned empty, attempt complete-login sync
+        const completeRes = await authRepository.completeLogin({});
+        const mongoUser = (completeRes as any)?.user || (completeRes as any)?.data?.user;
+        const societyObj = (completeRes as any)?.society || (completeRes as any)?.data?.society;
+
+        if (mongoUser && mongoUser._id && isMounted) {
+          setUserSession(
+            mongoUser,
+            societyObj,
+            clerkUser
+              ? {
+                  id: clerkUser.id,
+                  email: clerkUser.primaryEmailAddress?.emailAddress,
+                  fullName: clerkUser.fullName || undefined,
+                  imageUrl: clerkUser.imageUrl,
+                }
+              : null
+          );
+          setInitialized(true);
+          return;
         }
 
+        // If backend verification returned invalid data, purge session
         if (isMounted) {
-          setInitialized(true);
+          await performFullLogout();
         }
       } catch (err) {
-        console.warn("[useAuthInitializer] Session restore completed without active backend session:", err);
+        console.warn("[useAuthInitializer] Backend verification failed on startup — purging session:", err);
         if (isMounted) {
-          setInitialized(true);
+          await performFullLogout();
         }
       }
     }

@@ -33,12 +33,20 @@ export const apiClient: AxiosInstance = axios.create({
 });
 
 let getTokenFn: (() => Promise<string | null>) | null = null;
+let unauthenticatedHandler: (() => void) | null = null;
 
 /**
  * Registers the Clerk auth token retriever function.
  */
 export function setAuthTokenProvider(provider: () => Promise<string | null>): void {
   getTokenFn = provider;
+}
+
+/**
+ * Registers global unauthenticated (401) handler to trigger full app logout.
+ */
+export function setUnauthenticatedHandler(handler: () => void): void {
+  unauthenticatedHandler = handler;
 }
 
 // Request Interceptor: Inject Bearer JWT Token if available
@@ -59,10 +67,17 @@ apiClient.interceptors.request.use(
   (error) => Promise.reject(normalizeApiError(error))
 );
 
-// Response Interceptor: Normalize all errors
+// Response Interceptor: Normalize all errors & trigger auto-logout on 401
 apiClient.interceptors.response.use(
   (response) => response,
-  (error) => Promise.reject(normalizeApiError(error))
+  (error) => {
+    const normalized = normalizeApiError(error);
+    if (normalized.status === 401 && unauthenticatedHandler) {
+      console.warn("[Axios] Received 401 Unauthorized from backend — triggering unauthenticated handler.");
+      unauthenticatedHandler();
+    }
+    return Promise.reject(normalized);
+  }
 );
 
 export default apiClient;

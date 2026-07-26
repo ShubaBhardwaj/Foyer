@@ -19,7 +19,7 @@ interface AuthState {
   isAuthenticated: boolean;
   isLoaded: boolean;
   isInitialized: boolean;
-  
+
   setUserSession: (user: UserMongoDto | null, society?: SocietyDto | null, clerkUser?: ClerkUserMetaData | null) => void;
   setClerkUser: (clerkUser: ClerkUserMetaData | null) => void;
   setInitialized: (initialized: boolean) => void;
@@ -39,7 +39,8 @@ export const useAuthStore = create<AuthState>((set) => ({
   isInitialized: false,
 
   setUserSession: (user, society = null, clerkUser = null) => {
-    if (!user) {
+    // Condition 2: Application authentication ONLY exists when a valid MongoDB user is returned from backend
+    if (!user || !user._id) {
       set({
         user: null,
         society: null,

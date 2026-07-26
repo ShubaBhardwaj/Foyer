@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
-import * as WebBrowser from "expo-web-browser";
+import * as Linking from "expo-linking";
 import Toast from "react-native-toast-message";
 import { societyRepository } from "@/repositories/society.repository";
 import { authRepository } from "@/repositories/auth.repository";
@@ -10,8 +10,34 @@ import { queryKeys } from "@/lib/query-keys";
 import { getClerkModule } from "@/lib/clerk";
 import { ValidateSocietyCodeResponseDto } from "@/types/api/auth";
 
-// Warm up web browser for OAuth redirects on Android/iOS
-WebBrowser.maybeCompleteAuthSession();
+// Safely invoke maybeCompleteAuthSession without top-level native module throw
+function safeMaybeCompleteAuthSession() {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const WebBrowser = require("expo-web-browser");
+    if (WebBrowser && typeof WebBrowser.maybeCompleteAuthSession === "function") {
+      WebBrowser.maybeCompleteAuthSession();
+    }
+  } catch {
+    // WebBrowser native module absent in dev build
+  }
+}
+
+safeMaybeCompleteAuthSession();
+
+// Safely generate redirect URI for OAuth
+function getRedirectUri(): string {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const AuthSession = require("expo-auth-session");
+    if (AuthSession && typeof AuthSession.makeRedirectUri === "function") {
+      return AuthSession.makeRedirectUri();
+    }
+  } catch {
+    // Fallback to expo-linking URL if expo-auth-session is unlinked
+  }
+  return Linking.createURL("/oauth-native-callback");
+}
 
 export function useLogin() {
   const router = useRouter();
@@ -19,6 +45,8 @@ export function useLogin() {
   const setUserSession = useAuthStore((s) => s.setUserSession);
 
   const clerk = getClerkModule();
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const sso = clerk?.useSSO ? clerk.useSSO() : null;
   // eslint-disable-next-line react-hooks/rules-of-hooks
   const oauth = clerk?.useOAuth ? clerk.useOAuth({ strategy: "oauth_google" }) : null;
 
@@ -92,11 +120,29 @@ export function useLogin() {
     setIsGoogleLoading(true);
     try {
       let clerkUserId: string | null = null;
+      const redirectUrl = getRedirectUri();
 
-      // 1. Open Clerk Google OAuth browser window if available
-      if (oauth && oauth.startOAuthFlow) {
+      // 1. Open Clerk Google OAuth browser window via useSSO (canonical v2.19+) or useOAuth fallback
+      if (sso && sso.startSSOFlow) {
         try {
-          const { createdSessionId, setActive } = await oauth.startOAuthFlow();
+          const { createdSessionId, setActive } = await sso.startSSOFlow({
+            strategy: "oauth_google",
+            redirectUrl,
+            additionalParameters: { prompt: "select_account" },
+          });
+          if (createdSessionId && setActive) {
+            await setActive({ session: createdSessionId });
+            clerkUserId = createdSessionId;
+          }
+        } catch (ssoErr) {
+          console.warn("[handleGoogleSignIn] Clerk SSO flow log:", ssoErr);
+        }
+      } else if (oauth && oauth.startOAuthFlow) {
+        try {
+          const { createdSessionId, setActive } = await oauth.startOAuthFlow({
+            redirectUrl,
+            additionalParameters: { prompt: "select_account" },
+          });
           if (createdSessionId && setActive) {
             await setActive({ session: createdSessionId });
             clerkUserId = createdSessionId;
@@ -121,7 +167,7 @@ export function useLogin() {
         throw new Error("Backend authentication failed. User object missing.");
       }
 
-      // 3. Update Zustand Store with Backend truth
+      // 3. Update Zustand Store with Backend truth (MongoDB user)
       setUserSession(mongoUser, societyObj, {
         id: clerkUserId || mongoUser.clerkId || "user_id",
         email: mongoUser.email,
@@ -155,7 +201,7 @@ export function useLogin() {
     } finally {
       setIsGoogleLoading(false);
     }
-  }, [oauth, validatedSociety, societyCode, setUserSession, queryClient, router]);
+  }, [sso, oauth, validatedSociety, societyCode, setUserSession, queryClient, router]);
 
   return {
     societyCode,

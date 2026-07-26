@@ -115,6 +115,6 @@ userSchema.pre("save", function () {
 
 // Compound index for fast lookup & concurrency protection
 userSchema.index({ society: 1, uniqueId: 1 }, { unique: true });
-userSchema.index({ clerkId: 1 }, { sparse: true });
+userSchema.index({ clerkId: 1 }, { unique: true, sparse: true });
 
 export default model<IUser>("User", userSchema);

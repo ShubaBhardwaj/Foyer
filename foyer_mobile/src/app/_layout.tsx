@@ -1,3 +1,4 @@
+import "@/lib/polyfill-crypto";
 import { useEffect, useCallback } from "react";
 import { Stack } from "expo-router";
 import { useFonts } from "expo-font";
