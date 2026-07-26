@@ -8,8 +8,8 @@ export function useDashboard() {
 
   const query = useQuery({
     queryKey: queryKeys.dashboard.byRole(role || "default"),
-    queryFn: () => dashboardRepository.getDashboardData(),
-    staleTime: 30_000, // 30 seconds
+    queryFn: () => dashboardRepository.getDashboardData(role || undefined),
+    staleTime: 30_000,
   });
 
   return {
